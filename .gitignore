@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# venv (실폴더가 venv/ 라 둘 다 무시)
+venv/
+.venv/
+
+# env / secrets  ← 절대 커밋 금지
+.env
+*.key
+
+# data: 실데이터·오디오·라벨 금지, 더미/샘플만 예외
+data/*
+!data/dummy/
+!data/sample/
+!data/.gitkeep
+
+# 모델 산출물
+*.pkl
+*.joblib
+*.pt
+*.onnx
+models/
+
+# OS / notebook 출력
+.DS_Store
+notebooks/**/*.html

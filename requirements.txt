@@ -1,0 +1,29 @@
+# === EarlyEar bootstrap (버전 미고정) ===
+# 해외 LLM '모델'은 금지지만, 도메인 엔드포인트(Friendli/Upstage/adot)는 HTTP라 requests/httpx로 호출.
+
+# core
+numpy
+scipy
+pandas
+scikit-learn
+xgboost
+pydantic            # 요약/사건 JSON 스키마 고정 검증 (거짓 기억 방지)
+python-dotenv       # .env 로딩
+
+# 음향 피처 (원본 오디오 직접 추출, STT 무관)
+librosa
+soundfile
+praat-parselmouth   # import 이름은 parselmouth (jitter/shimmer/F0)
+
+# 언어 피처 (한국어)
+kiwipiepy           # 형태소/토크나이즈, konlpy 대비 Java 불필요
+
+# RAG / 검색
+faiss-cpu           # GPU 들어오면 faiss-gpu로 교체 가능
+httpx
+requests
+
+# dev
+jupyter
+ipykernel
+pytest
