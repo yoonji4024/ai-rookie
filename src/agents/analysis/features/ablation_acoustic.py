@@ -40,9 +40,9 @@ def main():
     groups = {
         "전체(음향+언어)":      sel(lambda n: True),
         "음향 전체(ac_*)":       sel(lambda n: n.startswith("ac_")),
-        "  음질(voice: f0/jitter/shimmer/hnr/formant/cpp)":
+        "  음질(voice: f0/jitter/shimmer/hnr/cpp)":
             sel(lambda n: any(k in n for k in
-                ("f0", "jitter", "shimmer", "hnr", "f1_", "f2_", "f3_", "cpp"))),
+                ("f0", "jitter", "shimmer", "hnr", "cpp"))),
         "  pause":               sel(lambda n: "ac_pause" in n),
         "  tempo(voiced-seg)":   sel(lambda n: "voiced" in n),
         "  spectral(zcr)":       sel(lambda n: n.startswith("ac_spec_")),

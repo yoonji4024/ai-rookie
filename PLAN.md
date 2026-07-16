@@ -56,4 +56,8 @@
   - **음질 심화**: 포먼트 F1~F3(평균/표준편차) + CPP 추가.
   - **spectral 정리**: centroid/bw/rolloff/rms 제거(판별력 0.5대), ZCR만 유지.
   - **tempo 신규**: voiced-segment rate/run 통계(발화 분절성, 텍스트 무관).
-  - ablation에 tempo 그룹 추가. 로컬 end-to-end 통과(NaN/inf 없음). **서버 재측정 대기** — formant/CPP는 praat 필요라 서버에서만 실값.
+  - ablation에 tempo 그룹 추가. 로컬 end-to-end 통과(NaN/inf 없음).
+- 2026-07-16 (서버 2차 재측정): **전체 AUC 0.894** (세션 최고). tempo 신규 clean win — voiced_run_mean/seg_rate 각 0.753. CPP 성공(0.737, HC>MCI). '음향−발화량 제거' 0.804 유지.
+  - ⚠️ 포먼트 실패: f1_mean 0.503(죽음)~f3_std 0.651, voice 그룹 개선 0 → **제거 결정**.
+- 2026-07-16 (음성 3차, 로컬 검증): **포먼트 6개 제거, CPP 유지.** 음향 57→51. 슬림화로 과적합 감소·음향-only AUC 회복 기대. **서버 재측정 대기.**
+  - 음질 그룹 확정: f0(4)·jitter(3)·shimmer(3)·HNR·CPP. tempo(voiced 3)·pause(6)와 함께 발화량 무관 주력 신호.

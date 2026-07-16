@@ -6,7 +6,8 @@ segments가 주어지면 참가자(PAR) 구간만 사용 (인터뷰어 음성 �
 피처 그룹
   - pause   : 휴지 비율/빈도/길이 (발화 내부 무음)
   - tempo   : voiced-segment 분절 통계 (발화 분절/속도, 텍스트 무관)
-  - voice   : F0(평균/변동/변동계수), jitter 3종, shimmer 3종, HNR, 포먼트 F1~F3, CPP  ← 음질, 발화량 무관
+  - voice   : F0(평균/변동/변동계수), jitter 3종, shimmer 3종, HNR, CPP  ← 음질, 발화량 무관
+              (포먼트 F1~F3는 Kang에서 판별력 낮아(0.50~0.65) 제거, CPP만 유지)
   - spectral: ZCR 통계 (centroid/bw/rolloff/rms는 판별력 낮아 제거)
   - mfcc    : MFCC13 평균/표준편차
   - duration: phonation_time, total_speech_dur  ← 발화량 계열(교란 주의, ablation으로 분리 검증)
@@ -88,13 +89,12 @@ def _tempo_features(chunks: list[np.ndarray], sr: int) -> dict:
 
 
 def _voice_features(y: np.ndarray, sr: int) -> dict:
-    """음질 패널 — F0, jitter 3종, shimmer 3종, HNR, 포먼트 F1~F3, CPP. 전부 발화량 무관."""
+    """음질 패널 — F0, jitter 3종, shimmer 3종, HNR, CPP. 전부 발화량 무관."""
     keys = [
         "f0_mean", "f0_std", "f0_range", "f0_cv",
         "jitter_local", "jitter_rap", "jitter_ppq5",
         "shimmer_local", "shimmer_apq3", "shimmer_apq5",
         "hnr",
-        "f1_mean", "f1_std", "f2_mean", "f2_std", "f3_mean", "f3_std",
         "cpp",
     ]
     if not _HAS_PRAAT:
@@ -118,15 +118,6 @@ def _voice_features(y: np.ndarray, sr: int) -> dict:
     hnr = _safe(lambda: call(
         call(snd, "To Harmonicity (cc)", 0.01, 60, 0.1, 1.0), "Get mean", 0, 0))
 
-    # 포먼트 F1~F3 (성도 형태 — 조음 정확도 관련)
-    formant = call(snd, "To Formant (burg)", 0.0, 5, 5500, 0.025, 50)
-
-    def _fmean(n):
-        return _safe(lambda: call(formant, "Get mean", n, 0, 0, "hertz"))
-
-    def _fstd(n):
-        return _safe(lambda: call(formant, "Get standard deviation", n, 0, 0, "hertz"))
-
     # CPP (cepstral peak prominence — 음성 명료도/주기성). praat 버전별 시그니처 방어.
     def _cpp():
         pc = call(snd, "To PowerCepstrogram", 60, 0.002, 5000, 50)
@@ -145,9 +136,6 @@ def _voice_features(y: np.ndarray, sr: int) -> dict:
         "shimmer_apq3": _safe(lambda: call([snd, pp], "Get shimmer (apq3)", 0, 0, 0.0001, 0.02, 1.3, 1.6)),
         "shimmer_apq5": _safe(lambda: call([snd, pp], "Get shimmer (apq5)", 0, 0, 0.0001, 0.02, 1.3, 1.6)),
         "hnr": hnr,
-        "f1_mean": _fmean(1), "f1_std": _fstd(1),
-        "f2_mean": _fmean(2), "f2_std": _fstd(2),
-        "f3_mean": _fmean(3), "f3_std": _fstd(3),
         "cpp": _safe(_cpp),
     }
 
