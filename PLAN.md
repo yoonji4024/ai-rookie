@@ -43,3 +43,7 @@
   - ⚠️ 검증 이슈 1: 상위 피처가 발화량 계열(phonation_time, total_speech_dur, n_morphemes). HC가 훨씬 길게 말함(708s/1325형태소 vs 449s/738). 발화량 계열만으로 AUC 0.849, 제거해도 0.815 → 신호는 실재하나 "말 많이 함" 교란 가능. 발화당 정규화 피처로 재검토 필요.
   - ⚠️ 검증 이슈 2: pause_ratio ≈ 0 (양 그룹). 현재 PAR 발화 구간 내부만 무음 탐지 → 발화 간 휴지 미포착. 오디오 세그멘테이션 재설계 필요(disfluency=핵심 신호).
   - ⚠️ 환경: kiwipiepy(88MB 모델)·praat-parselmouth(소스빌드) 로컬 다운로드 지연 → 현재 언어=정규식 fallback, 음향 F0/jitter/shimmer=0. **GPU Live 서버에서 정식 설치 후 재측정 필요.** 코어 스택(scipy/sklearn/xgboost/librosa)은 설치 완료.
+- 2026-07-16 (서버, A100): GPU Live 워크로드 세팅 완료 — scp로 Kang 2GB 전송, `~/data`(NAS) 보존. venv 실패 → 시스템 파이썬에 `sudo pip install praat-parselmouth kiwipiepy`로 해결.
+  - **praat·kiwi 정식 동작 후 진짜 베이스라인: MCI AUC 0.874, Recall@90%Spec 0.500 (KPI PASS).**
+  - 음향 진단(diagnose_acoustic): **음질 피처가 깨끗한 신호로 확인** — shimmer AUC 0.762, f0_mean 0.716, jitter 0.713 (발화량 무관). MCI가 shimmer/jitter↑, f0↓.
+  - 잔여 과제(음성 담당): 발화량 교란(total_speech_dur 0.866 최상위), pause 0비율 43~58%(불안정). → 음질 패널 확장 + pause 안정화 + 음향-only/발화량 제거 ablation.
