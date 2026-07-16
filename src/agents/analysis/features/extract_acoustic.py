@@ -25,6 +25,7 @@ except ImportError:  # 미설치 시 음질 피처는 0으로 채움 (fallback)
     _HAS_PRAAT = False
 
 SR = 16000
+CPP_MAX_S = 60          # CPP 계산에 쓸 최대 오디오 길이(초) — 속도/안정성 절충
 
 
 def _par_audio(y: np.ndarray, sr: int, segments: list[tuple[float, float]] | None):
@@ -119,8 +120,16 @@ def _voice_features(y: np.ndarray, sr: int) -> dict:
         call(snd, "To Harmonicity (cc)", 0.01, 60, 0.1, 1.0), "Get mean", 0, 0))
 
     # CPP (cepstral peak prominence — 음성 명료도/주기성). praat 버전별 시그니처 방어.
+    # 속도: 전체 오디오는 너무 느려(파일당 수십만 프레임) 중간 CPP_MAX_S초만 사용,
+    #       cepstrogram 간격 2ms→10ms. 평균 CPP는 이 샘플로도 안정적.
     def _cpp():
-        pc = call(snd, "To PowerCepstrogram", 60, 0.002, 5000, 50)
+        yv = y
+        cap = int(CPP_MAX_S * sr)
+        if len(yv) > cap:
+            start = (len(yv) - cap) // 2
+            yv = yv[start:start + cap]
+        sc = parselmouth.Sound(yv.astype(np.float64), sampling_frequency=sr)
+        pc = call(sc, "To PowerCepstrogram", 60, 0.01, 5000, 50)
         return call(pc, "Get CPPS", "no", 0.02, 0.0005, 60, 330, 0.05,
                     "Parabolic", 0.001, 0, "Straight", "Robust")
 
