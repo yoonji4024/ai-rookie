@@ -5,8 +5,9 @@ segments가 주어지면 참가자(PAR) 구간만 사용 (인터뷰어 음성 �
 
 피처 그룹
   - pause   : 휴지 비율/빈도/길이 (발화 내부 무음)
-  - voice   : F0(평균/변동/변동계수), jitter 3종, shimmer 3종, HNR  ← 음질, 발화량 무관
-  - spectral: centroid/bandwidth/rolloff/ZCR/RMS 통계
+  - tempo   : voiced-segment 분절 통계 (발화 분절/속도, 텍스트 무관)
+  - voice   : F0(평균/변동/변동계수), jitter 3종, shimmer 3종, HNR, 포먼트 F1~F3, CPP  ← 음질, 발화량 무관
+  - spectral: ZCR 통계 (centroid/bw/rolloff/rms는 판별력 낮아 제거)
   - mfcc    : MFCC13 평균/표준편차
   - duration: phonation_time, total_speech_dur  ← 발화량 계열(교란 주의, ablation으로 분리 검증)
 """
@@ -66,13 +67,35 @@ def _pause_features(chunks: list[np.ndarray], sr: int) -> dict:
     }
 
 
+def _tempo_features(chunks: list[np.ndarray], sr: int) -> dict:
+    """발화 분절 통계 — voiced 구간 개수/길이 (텍스트 무관 발화 속도·분절성).
+
+    조음 단위 근사. MCI는 분절이 짧고 잦아질 수 있음(word-finding 곤란).
+    """
+    voiced_runs: list[float] = []
+    voiced_dur = 0.0
+    for c in chunks:
+        for a, b in librosa.effects.split(c, top_db=30):
+            d = (b - a) / sr
+            voiced_runs.append(d)
+            voiced_dur += d
+    n = len(voiced_runs)
+    return {
+        "voiced_seg_rate": n / voiced_dur if voiced_dur else 0.0,   # 초당 발화 분절 수
+        "voiced_run_mean": float(np.mean(voiced_runs)) if voiced_runs else 0.0,
+        "voiced_run_std": float(np.std(voiced_runs)) if voiced_runs else 0.0,
+    }
+
+
 def _voice_features(y: np.ndarray, sr: int) -> dict:
-    """음질 패널 — F0, jitter 3종, shimmer 3종, HNR. 전부 발화량 무관."""
+    """음질 패널 — F0, jitter 3종, shimmer 3종, HNR, 포먼트 F1~F3, CPP. 전부 발화량 무관."""
     keys = [
         "f0_mean", "f0_std", "f0_range", "f0_cv",
         "jitter_local", "jitter_rap", "jitter_ppq5",
         "shimmer_local", "shimmer_apq3", "shimmer_apq5",
         "hnr",
+        "f1_mean", "f1_std", "f2_mean", "f2_std", "f3_mean", "f3_std",
+        "cpp",
     ]
     if not _HAS_PRAAT:
         return {k: 0.0 for k in keys}
@@ -95,6 +118,21 @@ def _voice_features(y: np.ndarray, sr: int) -> dict:
     hnr = _safe(lambda: call(
         call(snd, "To Harmonicity (cc)", 0.01, 60, 0.1, 1.0), "Get mean", 0, 0))
 
+    # 포먼트 F1~F3 (성도 형태 — 조음 정확도 관련)
+    formant = call(snd, "To Formant (burg)", 0.0, 5, 5500, 0.025, 50)
+
+    def _fmean(n):
+        return _safe(lambda: call(formant, "Get mean", n, 0, 0, "hertz"))
+
+    def _fstd(n):
+        return _safe(lambda: call(formant, "Get standard deviation", n, 0, 0, "hertz"))
+
+    # CPP (cepstral peak prominence — 음성 명료도/주기성). praat 버전별 시그니처 방어.
+    def _cpp():
+        pc = call(snd, "To PowerCepstrogram", 60, 0.002, 5000, 50)
+        return call(pc, "Get CPPS", "no", 0.02, 0.0005, 60, 330, 0.05,
+                    "Parabolic", 0.001, 0, "Straight", "Robust")
+
     return {
         "f0_mean": f0_mean,
         "f0_std": f0_std,
@@ -107,21 +145,17 @@ def _voice_features(y: np.ndarray, sr: int) -> dict:
         "shimmer_apq3": _safe(lambda: call([snd, pp], "Get shimmer (apq3)", 0, 0, 0.0001, 0.02, 1.3, 1.6)),
         "shimmer_apq5": _safe(lambda: call([snd, pp], "Get shimmer (apq5)", 0, 0, 0.0001, 0.02, 1.3, 1.6)),
         "hnr": hnr,
+        "f1_mean": _fmean(1), "f1_std": _fstd(1),
+        "f2_mean": _fmean(2), "f2_std": _fstd(2),
+        "f3_mean": _fmean(3), "f3_std": _fstd(3),
+        "cpp": _safe(_cpp),
     }
 
 
 def _spectral_features(y: np.ndarray, sr: int) -> dict:
-    """스펙트럼 형태 — centroid/bandwidth/rolloff/ZCR/RMS 평균·표준편차."""
-    cent = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
-    bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)[0]
-    roll = librosa.feature.spectral_rolloff(y=y, sr=sr)[0]
+    """스펙트럼 — ZCR만 유지 (centroid/bw/rolloff/rms는 판별력 낮고 MFCC와 중복이라 제거)."""
     zcr = librosa.feature.zero_crossing_rate(y)[0]
-    rms = librosa.feature.rms(y=y)[0]
-    out = {}
-    for name, v in [("centroid", cent), ("bandwidth", bw), ("rolloff", roll), ("zcr", zcr), ("rms", rms)]:
-        out[f"spec_{name}_mean"] = float(np.mean(v))
-        out[f"spec_{name}_std"] = float(np.std(v))
-    return out
+    return {"spec_zcr_mean": float(np.mean(zcr)), "spec_zcr_std": float(np.std(zcr))}
 
 
 def _mfcc_features(y: np.ndarray, sr: int, n_mfcc: int = 13) -> dict:
@@ -144,6 +178,7 @@ def extract_acoustic(
 
     feats = {}
     feats.update(_pause_features(chunks, sr))
+    feats.update(_tempo_features(chunks, sr))
     feats.update(_voice_features(par, sr))
     feats.update(_spectral_features(par, sr))
     feats.update(_mfcc_features(par, sr))

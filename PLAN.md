@@ -52,3 +52,8 @@
   - **발화량 교란 방어 확보: ablation '음향−발화량 제거' AUC 0.803** (duration 2개 빼도 유지).
   - 음질 검증: HNR 0.774, shimmer 0.76대, jitter 0.70~0.73, f0_mean 0.716 (전부 발화량 무관). ⚠️ spectral 그룹 0.543(ZCR 0.709만 유효) → 정리 대상.
   - 다음(음성): spectral 정리(ZCR만) + 음질 심화(포먼트 F1~F3·CPP).
+- 2026-07-16 (음성 2차 확장, 로컬 검증 완료): 음향 55→57.
+  - **음질 심화**: 포먼트 F1~F3(평균/표준편차) + CPP 추가.
+  - **spectral 정리**: centroid/bw/rolloff/rms 제거(판별력 0.5대), ZCR만 유지.
+  - **tempo 신규**: voiced-segment rate/run 통계(발화 분절성, 텍스트 무관).
+  - ablation에 tempo 그룹 추가. 로컬 end-to-end 통과(NaN/inf 없음). **서버 재측정 대기** — formant/CPP는 praat 필요라 서버에서만 실값.
