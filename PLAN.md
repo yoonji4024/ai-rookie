@@ -47,3 +47,8 @@
   - **praat·kiwi 정식 동작 후 진짜 베이스라인: MCI AUC 0.874, Recall@90%Spec 0.500 (KPI PASS).**
   - 음향 진단(diagnose_acoustic): **음질 피처가 깨끗한 신호로 확인** — shimmer AUC 0.762, f0_mean 0.716, jitter 0.713 (발화량 무관). MCI가 shimmer/jitter↑, f0↓.
   - 잔여 과제(음성 담당): 발화량 교란(total_speech_dur 0.866 최상위), pause 0비율 43~58%(불안정). → 음질 패널 확장 + pause 안정화 + 음향-only/발화량 제거 ablation.
+- 2026-07-16 (서버): **음향 피처 확장(37→55) 완료.** 음질 패널(jitter 3종·shimmer 3종·HNR·f0_cv) + 스펙트럼(centroid/bw/rolloff/zcr/rms) + pause 안정화(top_db 30, ≥100ms, time_ratio·long_pause 추가).
+  - 결과: baseline AUC **0.876**, 음향만 0.864. **pause 안정화 성공**(pause_ratio 0비율 16%→6%, AUC 0.799; pause 그룹만 0.792).
+  - **발화량 교란 방어 확보: ablation '음향−발화량 제거' AUC 0.803** (duration 2개 빼도 유지).
+  - 음질 검증: HNR 0.774, shimmer 0.76대, jitter 0.70~0.73, f0_mean 0.716 (전부 발화량 무관). ⚠️ spectral 그룹 0.543(ZCR 0.709만 유효) → 정리 대상.
+  - 다음(음성): spectral 정리(ZCR만) + 음질 심화(포먼트 F1~F3·CPP).
