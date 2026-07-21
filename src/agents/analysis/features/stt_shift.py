@@ -20,9 +20,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import warnings
 from pathlib import Path
 
 import numpy as np
+
+# 단일 클래스 경고는 우리가 직접 안내하므로 sklearn 경고 도배를 막는다
+warnings.filterwarnings("ignore", message="Only one class is present")
 
 CACHE = Path("data/kang_stt.json")
 PAR_AUDIO_DIR = Path("data/kang_par_audio")
@@ -92,7 +96,16 @@ def build(limit: int | None = None, mode: str = "par") -> dict:
 
     stt = get_stt()
     cache = json.loads(CACHE.read_text(encoding="utf-8")) if CACHE.exists() else {}
-    recs = load_kang()[:limit] if limit else load_kang()
+    recs = load_kang()
+
+    if limit:
+        # ⚠️ 앞에서 N명을 자르면 전부 HC가 된다(정렬 순서상). 한 클래스만 모이면
+        #    AUC 계산이 불가능해 결과가 전부 nan이 된다. → 양쪽에서 균등 추출.
+        hc = [r for r in recs if r.label == "HC"]
+        mci = [r for r in recs if r.label == "MCI"]
+        half = max(1, limit // 2)
+        recs = hc[:half] + mci[: limit - half]
+        print(f"  (균등 추출: HC {min(half, len(hc))}명 + MCI {min(limit-half, len(mci))}명)")
 
     for i, r in enumerate(recs, 1):
         key = f"{r.subject_id}::{mode}"
@@ -157,8 +170,13 @@ def main():
     if not ids:
         raise SystemExit(f"mode={a.mode} 캐시 없음 — --build --mode {a.mode} 먼저 실행")
     y = np.array([1 if cache[i]["label"] == "MCI" else 0 for i in ids])
-    print(f"[mode={a.mode}] 대상 {len(ids)}명 "
-          f"(HC {int((y==0).sum())} / MCI {int((y==1).sum())})\n")
+    n_hc, n_mci = int((y == 0).sum()), int((y == 1).sum())
+    print(f"[mode={a.mode}] 대상 {len(ids)}명 (HC {n_hc} / MCI {n_mci})\n")
+
+    both_classes = n_hc > 0 and n_mci > 0
+    if not both_classes:
+        print("⚠️ 한 클래스만 수집됨 — 판별력(AUC) 비교는 건너뜁니다.")
+        print("   두 클래스를 모으려면: --build --limit N (양쪽에서 균등 추출)\n")
 
     # 1) WER
     wers = [wer(cache[i]["gold_text"], cache[i]["stt_text"]) for i in ids]
@@ -180,16 +198,17 @@ def main():
         print(f"   {k:30s} gold {g:.4f} → STT {s:.4f}  보존 {keep:5.1f}%{flag}")
 
     # 3) 판별력 유지 — 실전 성능의 상한
-    print("\n3) 판별력 유지 (단변량 AUC)")
-    for j, k in enumerate(FEATURE_NAMES):
-        try:
+    if both_classes:
+        print("\n3) 판별력 유지 (단변량 AUC)")
+        for j, k in enumerate(FEATURE_NAMES):
+            if len(set(G[:, j])) < 2 and len(set(S[:, j])) < 2:
+                print(f"   {k:30s} (값이 전부 동일 — 비교 불가)")
+                continue
             ag = max(roc_auc_score(y, G[:, j]), 1 - roc_auc_score(y, G[:, j]))
             as_ = max(roc_auc_score(y, S[:, j]), 1 - roc_auc_score(y, S[:, j]))
-        except ValueError:
-            continue
-        drop = ag - as_
-        flag = "  ⚠️ 붕괴" if drop >= 0.10 else ("  유지" if drop < 0.05 else "")
-        print(f"   {k:30s} gold {ag:.3f} → STT {as_:.3f}  ({-drop:+.3f}){flag}")
+            drop = ag - as_
+            flag = "  ⚠️ 붕괴" if drop >= 0.10 else ("  유지" if drop < 0.05 else "")
+            print(f"   {k:30s} gold {ag:.3f} → STT {as_:.3f}  ({-drop:+.3f}){flag}")
 
     print("\n해석: 보존율이 낮거나 AUC가 크게 떨어지는 마커는 **런타임에서 못 쓴다.**")
     print("      → 해당 신호는 STT 텍스트 대신 **음향 피처로 대체**해야 한다.")

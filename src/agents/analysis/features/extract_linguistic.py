@@ -115,6 +115,14 @@ def extract_linguistic(transcript: str, word_timings: list[dict] | None = None) 
                       ("krr_incomplete_ending_rate", "krr_fragment_repeat_rate",
                        "krr_demonstrative_rate")})
 
+    # 내용(semantic) 피처 — 시간·장소 지남력, 논리 연결 (형태소당 정규화)
+    try:
+        from src.agents.analysis.features.content_features import extract_content
+        feats.update(extract_content(utt_texts if word_timings else [transcript]))
+    except Exception:
+        from src.agents.analysis.features.content_features import FEATURE_NAMES as _CF
+        feats.update({k: 0.0 for k in _CF})
+
     # 타이밍 기반: 발화 속도, 응답 특성
     if word_timings:
         durs, sylls, gaps = [], [], []
