@@ -29,7 +29,13 @@ from pathlib import Path
 from src.common.llm import LLMError, chat_json
 
 CACHE = Path("data/kang_kr_disfluency.json")
-MAX_CHARS = 3000          # 1회 분석 텍스트 상한(믿음 입력 제한 대비)
+
+# ⚠️ 청크 크기가 성능을 좌우한다.
+#    3000자를 통째로 주면 믿:음이 마커를 하나도 못 센다(전부 0 반환).
+#    반면 짧은 입력(수십 자)에서는 조사오류·자기수정·지시어남용을 근거까지 정확히 집어낸다.
+#    → 발화 몇 개씩 잘라 분석하고 합산한다.
+CHUNK_UTTERANCES = 10     # 1회 분석할 발화 수
+MAX_CHARS = 800           # 청크 1개의 문자 상한(안전장치)
 
 MARKERS = [
     "particle_error",      # 조사 오류·생략
@@ -69,14 +75,14 @@ def _empty() -> dict:
     return {m: {"count": 0, "evidence": []} for m in MARKERS}
 
 
-def analyze(transcript: str, n_utterances: int = 0, raise_on_error: bool = False) -> dict:
-    """전사 → 마커 카운트 + 근거.
+def analyze_chunk(text: str, raise_on_error: bool = False) -> dict:
+    """짧은 텍스트 1개 분석 (청크 단위).
 
     ⚠️ 실패를 조용히 0으로 되돌리면 **'호출 실패'와 '마커 없음'을 구분할 수 없다.**
        (실제로 77명 전원 0이 나와 검증이 무의미해진 적 있음)
-       → 실패 시 결과에 '_error'를 남기고, raise_on_error=True면 예외를 올린다.
+       → 실패 시 '_error'를 남기고, raise_on_error=True면 예외를 올린다.
     """
-    text = transcript.strip()[:MAX_CHARS]
+    text = text.strip()[:MAX_CHARS]
     if not text:
         return _empty()
     try:
@@ -100,6 +106,60 @@ def analyze(transcript: str, n_utterances: int = 0, raise_on_error: bool = False
             ev = v.get("evidence") or []
             res[m]["evidence"] = [str(e) for e in ev][:3] if isinstance(ev, list) else []
     return res
+
+
+def _chunks(utterances: list[str], size: int = CHUNK_UTTERANCES) -> list[str]:
+    """발화 목록 → 청크 텍스트 목록. 발화 수·글자 상한을 **둘 다** 지킨다.
+
+    (담고 나서 검사하면 상한을 초과하므로, 담기 전에 검사한다)
+    """
+    out, cur = [], []
+    for u in utterances:
+        if cur and (len(cur) >= size or len(" ".join(cur + [u])) > MAX_CHARS):
+            out.append(" ".join(cur))
+            cur = []
+        cur.append(u)
+    if cur:
+        out.append(" ".join(cur))
+    return out
+
+
+def analyze(utterances: list[str] | str, n_utterances: int = 0,
+            raise_on_error: bool = False, verbose: bool = False) -> dict:
+    """전사 → 마커 카운트 + 근거 (청크 분할 후 합산).
+
+    utterances: 발화 목록(권장) 또는 전체 텍스트(문장 단위로 자동 분할).
+    """
+    if isinstance(utterances, str):
+        import re
+        utterances = [s for s in re.split(r"(?<=[.!?…])\s+", utterances.strip()) if s]
+
+    parts = _chunks(utterances)
+    if not parts:
+        return _empty()
+
+    total = _empty()
+    errors = []
+    for i, p in enumerate(parts, 1):
+        r = analyze_chunk(p, raise_on_error=raise_on_error)
+        if err := r.pop("_error", None):
+            errors.append(err)
+            continue
+        for m in MARKERS:
+            total[m]["count"] += r[m]["count"]
+            for ev in r[m]["evidence"]:
+                if len(total[m]["evidence"]) < 5 and ev not in total[m]["evidence"]:
+                    total[m]["evidence"].append(ev)
+        if verbose:
+            n = sum(r[m]["count"] for m in MARKERS)
+            print(f"      청크 {i}/{len(parts)}: 마커 {n}개")
+
+    if errors and len(errors) == len(parts):
+        total["_error"] = f"전 청크 실패: {errors[0]}"
+    elif errors:
+        total["_partial_error"] = f"{len(errors)}/{len(parts)} 청크 실패"
+    total["_n_chunks"] = len(parts)
+    return total
 
 
 def to_features(markers: dict, n_utterances: int) -> dict:
@@ -127,21 +187,28 @@ def build_cache(out: Path = CACHE, limit: int | None = None) -> dict:
     for i, r in enumerate(recs, 1):
         if r.subject_id in cache:
             continue
-        m = analyze(r.par_text, len(r.par_utterances))
+        utts = [u.text for u in r.par_utterances if u.text]
+        m = analyze(utts, len(utts))
         err = m.pop("_error", None)
+        partial = m.pop("_partial_error", None)
+        n_chunks = m.pop("_n_chunks", 0)
         cache[r.subject_id] = {
             "label": r.label,
-            "n_utterances": len(r.par_utterances),
+            "n_utterances": len(utts),
+            "n_chunks": n_chunks,
             "markers": m,
-            "features": to_features(m, len(r.par_utterances)),
+            "features": to_features(m, len(utts)),
             **({"error": err} if err else {}),
+            **({"partial_error": partial} if partial else {}),
         }
         total = sum(v["count"] for v in m.values())
         if err:
             n_fail += 1
             print(f"  [{i}/{len(recs)}] {r.subject_id} ⚠️ 실패: {err[:80]}")
         else:
-            print(f"  [{i}/{len(recs)}] {r.subject_id} ({r.label}) 마커 {total}개")
+            note = f" ⚠️{partial}" if partial else ""
+            print(f"  [{i}/{len(recs)}] {r.subject_id} ({r.label}) "
+                  f"마커 {total}개 / 청크 {n_chunks}{note}")
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -193,12 +260,18 @@ def main():
     from src.preprocessing.kang_loader import load_kang
 
     for r in load_kang()[:2]:
-        m = analyze(r.par_text, len(r.par_utterances))
-        print(f"\n[{r.subject_id}] {r.label} — 발화 {len(r.par_utterances)}개")
+        utts = [u.text for u in r.par_utterances if u.text]
+        print(f"\n[{r.subject_id}] {r.label} — 발화 {len(utts)}개")
+        m = analyze(utts, len(utts), verbose=True)
+        m.pop("_n_chunks", None)
+        m.pop("_partial_error", None)
+        if err := m.pop("_error", None):
+            print(f"  ⚠️ {err}")
+            continue
         for k, v in m.items():
             if v["count"]:
                 print(f"  {k}: {v['count']}회 | 근거: {v['evidence'][:2]}")
-        print(f"  피처: {to_features(m, len(r.par_utterances))}")
+        print(f"  피처: {to_features(m, len(utts))}")
 
 
 if __name__ == "__main__":
