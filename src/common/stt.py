@@ -71,12 +71,24 @@ class Transcript:
     def speakers(self) -> list[int]:
         return sorted({u.speaker for u in self.utterances if u.speaker is not None})
 
+    def speaker_durations(self) -> dict[int, float]:
+        return {s: sum(u.end - u.start for u in self.by_speaker(s)) for s in self.speakers}
+
     def main_speaker(self) -> int | None:
-        """가장 오래 말한 화자 — 인터뷰에서 보통 참가자(PAR)."""
-        if not self.speakers:
-            return None
-        dur = {s: sum(u.end - u.start for u in self.by_speaker(s)) for s in self.speakers}
-        return max(dur, key=dur.get)
+        """가장 오래 말한 화자 — 인터뷰에서 보통 참가자(PAR).
+
+        ⚠️ 화자 분리가 3명 이상으로 나오기도 한다(잡음·중첩). 이때도 최장 화자를
+           참가자로 보되, 2위와의 격차가 작으면 신뢰도가 낮으므로 호출부에서 확인할 것
+           (diarization_confidence 참고).
+        """
+        d = self.speaker_durations()
+        return max(d, key=d.get) if d else None
+
+    def diarization_confidence(self) -> float:
+        """주 화자 발화 비중 (0~1). 낮으면 화자 분리를 믿기 어렵다."""
+        d = self.speaker_durations()
+        total = sum(d.values())
+        return max(d.values()) / total if total else 0.0
 
 
 class AXSTT:
@@ -154,27 +166,42 @@ class AXSTT:
 
     @staticmethod
     def _parse(d: dict) -> Transcript:
-        utts = []
+        """**단어 단위 화자**로 발화를 재구성한다.
+
+        ⚠️ STT의 utterance 경계는 화자 전환과 일치하지 않는다.
+           실측 예: 한 utterance 안에 조사자 질문과 참가자 답변이 함께 들어옴
+             "...즐겨보신 거 있으세요? 드라마 봤어요."
+           → utterance 단위로 다수결 화자를 매기면 상대 화자 발화가 섞여
+             참가자 텍스트가 오염된다.
+           → words[].speaker로 **연속 동일 화자 구간**을 묶어 발화를 다시 만든다.
+        """
+        words = []
         for u in d.get("utterances", []):
-            words = u.get("words") or []
-            # utterance 화자 = 그 안에서 가장 많이 등장한 화자
-            spk = None
-            if words:
-                cnt: dict[int, int] = {}
-                for w in words:
-                    s = w.get("speaker")
-                    if s is not None:
-                        cnt[s] = cnt.get(s, 0) + 1
-                spk = max(cnt, key=cnt.get) if cnt else None
-            utts.append(Utterance(
-                text=(u.get("text") or "").strip(),
-                start=float(u.get("start_time", 0)),
-                end=float(u.get("end_time", 0)),
-                speaker=spk,
-            ))
-        return Transcript(utterances=utts,
-                          duration=float(d.get("transcript_duration", 0)),
-                          raw=d)
+            for w in (u.get("words") or []):
+                t = (w.get("text") or "").strip()
+                if t:
+                    words.append((w.get("speaker"), t,
+                                  float(w.get("start_time", 0)),
+                                  float(w.get("end_time", 0))))
+
+        if not words:      # words가 없으면 utterance 그대로 (화자 미상)
+            utts = [Utterance((u.get("text") or "").strip(),
+                              float(u.get("start_time", 0)),
+                              float(u.get("end_time", 0)))
+                    for u in d.get("utterances", [])]
+            return Transcript(utts, float(d.get("transcript_duration", 0)), d)
+
+        words.sort(key=lambda x: x[2])
+        utts, cur_spk, buf, st, en = [], words[0][0], [], words[0][2], words[0][3]
+        for spk, txt, s, e in words:
+            if spk != cur_spk:                      # 화자 전환 → 발화 확정
+                utts.append(Utterance(" ".join(buf), st, en, cur_spk))
+                cur_spk, buf, st = spk, [], s
+            buf.append(txt)
+            en = e
+        if buf:
+            utts.append(Utterance(" ".join(buf), st, en, cur_spk))
+        return Transcript(utts, float(d.get("transcript_duration", 0)), d)
 
 
 def get_stt() -> AXSTT:
@@ -196,9 +223,17 @@ if __name__ == "__main__":
     try:
         t = stt.transcribe(target)
         print(f"길이 {t.duration:.0f}초 | 발화 {len(t.utterances)}개 | 화자 {t.speakers}")
+        dur = t.speaker_durations()
+        for s in t.speakers:
+            print(f"  sp{s}: {dur[s]:6.1f}초 ({dur[s]/sum(dur.values())*100:4.1f}%)")
         main = t.main_speaker()
-        print(f"주 화자(가장 오래 말함): {main}\n")
-        for u in t.utterances[:5]:
-            print(f"  [{u.start:6.1f}-{u.end:6.1f}] sp{u.speaker}: {u.text[:60]}")
+        conf = t.diarization_confidence()
+        print(f"주 화자: sp{main} (비중 {conf:.0%})"
+              + ("  ⚠️ 비중이 낮아 화자 분리 신뢰도 주의" if conf < 0.5 else ""))
+
+        print("\n[화자별 발화 — 질문/답변이 섞이지 않아야 정상]")
+        for u in t.utterances[:8]:
+            tag = "★참가자" if u.speaker == main else "  조사자"
+            print(f"  [{u.start:6.1f}] {tag} sp{u.speaker}: {u.text[:55]}")
     except STTError as e:
         print(f"⚠️ {e}")
