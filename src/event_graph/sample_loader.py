@@ -122,14 +122,30 @@ def build_event_graph(json_path: str | Path, video_path: str | Path | None = Non
     )
 
 
+def _is_label_json(path: Path) -> bool:
+    """라벨링 JSON인지 판별 (우리가 생성한 산출물 JSON과 구분)."""
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    return isinstance(d, dict) and "transcript" in d and "highlight" in d
+
+
 def load_all(root: str | Path = DATA_ROOT) -> list[EventGraph]:
-    """Sample 전체 → EventGraph 목록. mp4 경로도 매칭."""
+    """Sample 전체 → EventGraph 목록. mp4 경로도 매칭.
+
+    ⚠️ 한글 폴더명을 하드코딩하지 않는다.
+       macOS(NFD)에서 scp한 파일은 리눅스(NFC)와 바이트가 달라 경로 문자열 매칭이 실패한다.
+       → 폴더명 대신 **JSON 내용**으로 라벨 파일을 찾고, mp4는 파일명(stem)으로 매칭.
+    """
     root = Path(root)
     graphs = []
-    for jf in sorted((root / LABEL_DIR).glob("*/*.json")):
-        cat = jf.parent.name
-        mp4 = root / SRC_DIR / cat / f"{jf.stem}.mp4"
-        graphs.append(build_event_graph(jf, mp4 if mp4.exists() else None))
+    mp4s = {p.stem: p for p in root.rglob("*.mp4")}
+
+    for jf in sorted(root.rglob("*.json")):
+        if not _is_label_json(jf):
+            continue                      # event_graphs.json 등 생성 산출물 제외
+        graphs.append(build_event_graph(jf, mp4s.get(jf.stem)))
     return graphs
 
 
