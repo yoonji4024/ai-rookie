@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 
-from src.agents.analysis.scoring.report_solar import generate_speech_report
+from src.agents.analysis.scoring.report_solar import generate_speech_report_verified
 from src.agents.analysis.scoring.score import ScoringModel
 
 CACHE = Path("data/kang_features.npz")
@@ -100,12 +100,14 @@ def main():
 
     reports, results = [], []
     for i in range(n_runs):
-        rep = generate_speech_report(sr)
+        rep = generate_speech_report_verified(sr)      # 생성→검증→재시도 에이전트 루프
         res = check_report(rep, sr)
         reports.append(rep)
         results.append(res)
         status = "PASS" if res["ok"] else "FAIL"
-        print(f"[{i+1}/{n_runs}] {status}" + ("" if res["ok"] else f" — {res['issues']}"))
+        tries = rep.get("_attempts", 1)
+        print(f"[{i+1}/{n_runs}] {status} (시도 {tries}회)"
+              + ("" if res["ok"] else f" — {res['issues']}"))
 
     # 4) 재현성 — 인용한 점수가 매번 같은지, 스키마가 일정한지
     print("\n=== 재현성 ===")
