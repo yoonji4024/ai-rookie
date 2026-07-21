@@ -24,19 +24,27 @@ from dataclasses import dataclass
 import requests
 
 # ── .env 로딩 (python-dotenv 없으면 직접 파싱) ──────────────
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
+def load_env(path: str = ".env") -> None:
+    """.env를 환경변수로 로딩. 다른 모듈(tts 등)에서도 재사용."""
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(path)
+        return
+    except ImportError:
+        pass
     from pathlib import Path
 
-    _env = Path(".env")
-    if _env.exists():
-        for _l in _env.read_text(encoding="utf-8").splitlines():
-            _l = _l.strip()
-            if _l and not _l.startswith("#") and "=" in _l:
-                _k, _v = _l.split("=", 1)
-                os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
+    p = Path(path)
+    if not p.exists():
+        return
+    for line in p.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+load_env()
 
 
 def is_mock() -> bool:

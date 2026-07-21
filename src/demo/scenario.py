@@ -139,7 +139,9 @@ def run_case(name: str, script: dict, graph, tts=None) -> dict:
 
     audio = None
     if tts:
-        voice = TTSVoice(speed=0.85 if name == "mci" else 0.95)
+        # 노년 화자 + 느린 속도. MCI형은 더 느리게(실측: MCI가 발화량 적고 분절이 길다).
+        # seed 고정 → 같은 대본이면 항상 같은 음성(재현성).
+        voice = TTSVoice(speed=0.85 if name == "mci" else 0.95, seed=42)
         audio = str(tts.synthesize(text, AUDIO_DIR / f"{graph.content_id}_{name}.wav", voice))
 
     return {"text": text, "matching": m, "recall": s,
