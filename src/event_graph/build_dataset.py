@@ -69,6 +69,8 @@ def build_query_evalset(graphs) -> list[dict]:
 def verify(graphs) -> list[str]:
     """검증 — 문제 발견 시 메시지 목록 반환 (빈 리스트면 통과)."""
     issues = []
+    if not graphs:
+        return ["이벤트 그래프가 0개 — data/Sample 이 없거나 비어있음 (검증 불가)"]
     for g in graphs:
         nodes = sorted(g.nodes, key=lambda n: n.order)
         # 1) 시간순 정렬 확인
@@ -97,6 +99,12 @@ def verify(graphs) -> list[str]:
 
 def main():
     graphs = load_all()
+    if not graphs:
+        raise SystemExit(
+            "이벤트 그래프 0개 — data/Sample/02.라벨링데이터/*/*.json 을 찾지 못했습니다.\n"
+            "  서버라면 Sample 데이터를 먼저 전송하세요:\n"
+            "  (Mac에서) scp -r ~/Desktop/SLPR/ai-rookie/data/Sample gpulive:~/data/ai-rookie/data/"
+        )
     OUT.mkdir(parents=True, exist_ok=True)
 
     # 1) 이벤트 그래프
