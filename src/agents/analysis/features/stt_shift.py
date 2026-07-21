@@ -60,14 +60,25 @@ def build(limit: int | None = None) -> dict:
         except STTError as e:
             print(f"  [{i}/{len(recs)}] {r.subject_id} ⚠️ {str(e)[:100]}")
             continue
+
+        # ⚠️ Kang은 조사자(INV)+참가자(PAR) 인터뷰다. gold는 PAR만 쓰므로
+        #    STT도 **주 화자(가장 오래 말한 사람 = 참가자)** 만 골라야 공정한 비교가 된다.
+        main = t.main_speaker()
+        stt_utts = [u.text for u in (t.by_speaker(main) if main is not None else t.utterances)
+                    if u.text]
+
         cache[r.subject_id] = {
             "label": r.label,
             "gold_text": r.par_text,
             "gold_utterances": [u.text for u in r.par_utterances if u.text],
-            "stt_text": t.text,
-            "stt_utterances": t.utterances,
+            "stt_text": " ".join(stt_utts),
+            "stt_utterances": stt_utts,
+            "stt_speakers": t.speakers,
+            "stt_main_speaker": main,
+            "stt_all_utterances": len(t.utterances),
         }
-        print(f"  [{i}/{len(recs)}] {r.subject_id} gold {len(r.par_text)}자 / STT {len(t.text)}자")
+        print(f"  [{i}/{len(recs)}] {r.subject_id} gold {len(r.par_text)}자 / "
+              f"STT {len(' '.join(stt_utts))}자 (화자 {t.speakers}, 주화자 {main})")
         CACHE.parent.mkdir(parents=True, exist_ok=True)
         CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
     return cache

@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 
 import requests
@@ -82,6 +83,29 @@ class LLMError(RuntimeError):
     pass
 
 
+# ── Rate limit (A.X: 팀당 RPS 3, 429 시 Retry-After 미제공) ──
+# ⚠️ 팀원들과 **공유하는** 한도다. 배치 작업이 한도를 독점하면 다른 팀원 호출이 막힌다.
+#    → 클라이언트에서 간격을 강제하고, 429는 지수 백오프로 재시도한다.
+RPS_LIMIT = {"ax": 3.0}          # 모델별 초당 요청 상한
+_MIN_INTERVAL = {m: 1.0 / r for m, r in RPS_LIMIT.items()}
+_last_call: dict[str, float] = {}
+
+
+def _throttle(model: str) -> None:
+    interval = _MIN_INTERVAL.get(model)
+    if interval is None:
+        return
+    prev = _last_call.get(model)
+    if prev is not None:
+        wait = interval - (time.monotonic() - prev)
+        if wait > 0:
+            time.sleep(wait)
+    _last_call[model] = time.monotonic()
+
+
+MAX_CHARS = 120_000              # A.X 컨텍스트 한도 128,000자 — 여유 두고 자름
+
+
 def chat(
     model: str,
     system: str,
@@ -89,6 +113,7 @@ def chat(
     temperature: float = 0.0,
     timeout: int = 30,
     max_tokens: int | None = None,
+    retries: int = 3,
 ) -> str:
     """LLM 호출 → 응답 텍스트. model: 'ax'|'exaone'|'solar'|'midm'."""
     if is_mock():
@@ -101,6 +126,9 @@ def chat(
     if not key:
         raise LLMError(f"{spec.key_env} 미설정 — .env 확인")
 
+    if len(system) + len(user) > MAX_CHARS:
+        user = user[: MAX_CHARS - len(system)]
+
     payload = {
         "model": spec.resolved_model(),
         "messages": [
@@ -112,16 +140,38 @@ def chat(
     if max_tokens:
         payload["max_tokens"] = max_tokens
 
-    try:
-        r = requests.post(
-            f"{spec.base_url}/chat/completions",
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-            json=payload, timeout=timeout,
-        )
-        r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"]
-    except requests.RequestException as e:
-        raise LLMError(f"{model} 호출 실패: {e}") from e
+    last: Exception | None = None
+    for attempt in range(retries + 1):
+        _throttle(model)
+        try:
+            r = requests.post(
+                f"{spec.base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                json=payload, timeout=timeout,
+            )
+            if r.status_code == 429:                    # Rate limit — 지수 백오프
+                last = LLMError(f"{model} 429 Rate Limit")
+                if attempt < retries:
+                    time.sleep(2 ** attempt)            # 1s → 2s → 4s
+                    continue
+                raise last
+            r.raise_for_status()
+            return r.json()["choices"][0]["message"]["content"]
+        except requests.RequestException as e:
+            last = e
+            if attempt < retries and _retryable(e):
+                time.sleep(2 ** attempt)
+                continue
+            raise LLMError(f"{model} 호출 실패: {e}") from e
+    raise LLMError(f"{model} 재시도 소진: {last}")
+
+
+def _retryable(e: Exception) -> bool:
+    """일시적 오류만 재시도 (5xx·타임아웃). 4xx는 즉시 실패."""
+    resp = getattr(e, "response", None)
+    if resp is not None:
+        return resp.status_code >= 500
+    return isinstance(e, (requests.Timeout, requests.ConnectionError))
 
 
 def chat_json(model: str, system: str, user: str, **kw) -> dict:

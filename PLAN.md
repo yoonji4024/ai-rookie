@@ -120,7 +120,13 @@
 | **KT 믿:음** | **탐지 근거 제시** | ✅ |
 | NC VARCO | TTS 음성 | ✅ |
 
-- `src/common/stt.py`: A.X STT 클라이언트. OpenAI 호환(`/v1/audio/transcriptions`) 가정 — 다르면 `AX_STT_URL`·`AX_STT_MODEL` 환경변수로 덮어씀.
+- `src/common/stt.py`: A.X STT 클라이언트 — **공식 가이드(v1.3) 규격으로 구현 완료**.
+  - 인증 `X-API-Key` (⚠️ LLM은 Bearer, STT는 X-API-Key. 키는 동일)
+  - Batch 3단계: `GET /v1/stt/upload-token` → `PUT /v1/stt/upload/{token}` → `POST /v1/stt/transcript`
+  - 모델 `A.X_STT_note_batch` (Streaming은 `A.X_STT_note_streaming`, WebSocket)
+  - ⚠️ **화자 분리는 Batch만 지원** → Kang은 INV+PAR 인터뷰라 Batch 필수. 주화자(가장 오래 말한 사람)=참가자로 추출.
+  - 한도 100MB/30분 — Kang 파일 27~39MB·13~15분으로 적합.
+- **Rate limit 대응** (`llm.py`): A.X는 **팀당 RPS 3**(공유 한도, `Retry-After` 미제공). 클라이언트에서 호출 간격 강제 + 429 지수 백오프(1s→2s→4s). 컨텍스트 128,000자 한도 대비 자동 절삭. 검증: ax 4회 호출 시 1.02초 소요 확인.
 - `src/agents/analysis/features/stt_shift.py`: **STT 도메인 시프트 측정**. WER + 비유창성 마커 보존율 + 판별력 유지.
   - ⚠️ **핵심 리스크**: 현재 AUC 0.928은 사람이 만든 전사 기준. STT가 "제가 즈 , 나 , 제 , 제가"를 "제가"로 정리하면 방금 확보한 파편반복(0.726)·어미미완성(0.736) 신호가 소실. **런타임 성능 상한을 이 실험이 결정.**
 - `src/agents/analysis/cross_check.py`: **EXAONE 교차검증**. 생성(Solar)과 검증(EXAONE) 모델 분리 — 같은 모델이 자기 출력을 검증하면 편향 공유. 리포트 근거성·진단단정·장면매칭 3종.
