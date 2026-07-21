@@ -35,6 +35,21 @@
 - `src/agents/analysis/recall.py`: **score_recall_order()** — Kendall's tau + omission/reversal/intrusion/cue_dependency. CLAUDE.md §9 시그니처 준수. 6개 케이스 검증 통과.
 - `src/event_graph/extract_audio.py`: mp4 → 16kHz mono wav(ffmpeg). **기존 음향 파이프라인(51피처) 그대로 적용 확인**.
 - `src/event_graph/build_dataset.py`: 이벤트그래프 12장면 / 순서회상 질문 4개 / **질문 평가셋 72개** 생성 + 검증(시간순·비겹침·근거존재·채점기 정합) 전부 통과.
+- **서버 재현 완료(2026-07-21)**: 4개 콘텐츠 전부 음향 피처 51개 추출 성공(교양 845s/뉴스 1117s/문화 690s/생활 813s). Kang 인터뷰용 음향 분석이 **실제 방송 콘텐츠에도 그대로 적용됨**을 확인.
+- 트러블슈팅 기록:
+  - `.gitignore`의 `!data/sample/`(소문자)가 macOS 대소문자 미구분 탓에 `data/Sample/`(533MB)까지 허용 → 633MB push 실패. 예외 제거 + 미디어 확장자 이중 차단으로 해결.
+  - **macOS(NFD) ↔ 리눅스(NFC) 한글 파일명 인코딩 차이**로 서버에서 경로 매칭 실패. 한글 폴더명 하드코딩 제거, JSON 내용으로 라벨 파일 식별하도록 변경.
+  - 서버 로케일 POSIX → `LANG=C.UTF-8` 설정(한글 출력·글롭).
+
+## end-to-end 파이프라인 (프론트 없이) — 2026-07-21
+- `src/common/llm.py`: **국내 LLM 4종 통합 클라이언트**(A.X K1·EXAONE·Solar·믿음). Friendli 엔드포인트ID 규약 반영, JSON 파싱 방어, `health_check()`.
+  - **`LLM_MOCK=1` mock 모드** — 네트워크 없이 파이프라인 전 구간 구조 검증 가능(로컬 개발용).
+- `src/agents/conversation/timing_gate.py`: **decide_question()** — hard block(질문간격 90s·장면경계±3s·상한 5회·발화중) → draft(A.X K1) → judge(EXAONE) → refine. 실패 시 보수적 침묵.
+- `src/agents/analysis/response_matcher.py`: **자유발화 → scene_id** 매칭. 키워드 규칙 우선 + Solar 보정, 근거 보존, 확신 없으면 매칭 보류.
+- `src/session.py`: **CLI 세션 오케스트레이터**. 시청 시뮬→타이밍게이트 질문→응답수집→순서회상→매칭→채점→리포트→JSON 저장. `Responder` 클래스만 갈아끼우면 프론트·STT 연결 가능.
+- ✅ mock 모드 end-to-end 통과. 전 모듈 임포트·§9 시그니처 검증 완료.
+- 🐛 **중요 버그 수정**: 여러 장면이 공통 키워드('미국')를 가지면 한 번 언급이 여러 장면에 매칭돼 **실제 누락을 정상 회상으로 오판**. → 고유 키워드만 규칙 매칭에 사용하도록 수정(모호하면 LLM/보류).
+- ⏭ 서버에서 실제 LLM으로 검증(`health_check` → 세션 실행), 영어 데이터는 확보 후.
 
 ## NOW (이번 스프린트 — Kang 베이스라인)
 - [ ] (P0) Kang 로더 — `src/preprocessing/kang_loader.py`: .cha 파싱(발화·타임스탬프·라벨) + wav 매핑
