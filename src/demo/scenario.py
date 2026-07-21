@@ -147,8 +147,13 @@ def run_case(name: str, script: dict, graph, tts=None) -> dict:
         voice = TTSVoice(speed=0.85 if name == "mci" else 0.95, seed=42)
         audio = str(tts.synthesize(text, AUDIO_DIR / f"{graph.content_id}_{name}.wav", voice))
 
+    # 정합성 검증: 대본이 "빼겠다"고 선언한 장면을 매칭기가 잡아냈다면 = 과다 매칭 신호.
+    # (누락을 정상 회상으로 오판하는 실패 양상을 자동 감지)
+    declared = script.get("omitted_scenes", []) or []
+    over_matched = [sid for sid in declared if sid in m["scene_order"]]
+
     return {"text": text, "matching": m, "recall": s,
-            "declared_omitted": script.get("omitted_scenes", []), "audio": audio}
+            "declared_omitted": declared, "over_matched": over_matched, "audio": audio}
 
 
 def main():
@@ -183,6 +188,12 @@ def main():
         c, r = cases[k], cases[k]["recall"]
         print(f"\n  [{label}] {c['text'][:60]}...")
         print(f"    회상: tau={r['kendall_tau']:+.2f} 커버리지={r['coverage']:.0%} 오류={r['errors']}")
+        if c["declared_omitted"]:
+            print(f"    대본이 뺀 장면: {c['declared_omitted']}")
+        if c["over_matched"]:
+            print(f"    ⚠️ 과다 매칭: {c['over_matched']} — 빠뜨린 장면을 회상한 것으로 잘못 판정함")
+        elif k == "mci" and not c["declared_omitted"]:
+            print("    ⚠️ 대본이 누락을 만들지 않음 — 프롬프트 미준수(대조 약해짐)")
         if k in speech:
             sp = speech[k]
             print(f"    발화점수(실제 {sp['subject']}): {sp['total_score']}점 {sp['grade']}")

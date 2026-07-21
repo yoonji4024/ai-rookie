@@ -54,6 +54,27 @@ git clone <REMOTE_URL> ai-rookie
 cd ai-rookie
 ```
 
+### ⚠️ `.env`(API 키)는 git에 없다 — 반드시 별도 전송
+
+`.gitignore`가 키를 막으므로 서버에 자동으로 가지 않는다. **키를 추가·변경할 때마다** 다시 보내야 한다.
+
+```bash
+# (Mac에서)
+scp ~/Desktop/SLPR/ai-rookie/.env gpulive:~/data/ai-rookie/.env
+```
+
+확인:
+```bash
+# (서버에서)
+grep -c API_KEY ~/data/ai-rookie/.env      # 키 개수 확인
+python3 -m src.common.llm                  # LLM 4종 연결 점검
+```
+
+> 실제로 겪은 문제: VARCO 키를 나중에 추가했는데 서버 `.env`가 옛 버전이라
+> TTS가 조용히 `NullTTS`로 폴백됐다. 키 추가 시 이 단계를 잊지 말 것.
+
+### Kang 데이터
+
 **Kang 데이터(2GB)는 git에 없다** → 스토리지에 별도 업로드:
 - 콘솔 → 스토리지 상세 → **Web SFTP 연결** (또는 FileZilla, SSH와 동일 접속정보)
 - `data/Kang/{HC,MCI}/` 구조 그대로 업로드

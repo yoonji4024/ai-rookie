@@ -83,8 +83,10 @@ def match_response(
     response_text: str,
     event_graph,
     use_llm: bool = True,
-    min_confidence: float = 0.5,
+    min_confidence: float = 0.7,
 ) -> dict:
+    # min_confidence 0.5→0.7: LLM이 흐릿한 언급까지 매칭하면 **실제 누락이 정상 회상으로
+    # 오판**된다(키워드 중복 문제와 동일한 실패 양상). 확신 높은 것만 채택한다.
     """자유 발화 → {'scene_order', 'matches', 'unmatched'}.
 
     scene_order는 score_recall_order()의 response_events 인자로 바로 넣을 수 있다.
