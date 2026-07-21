@@ -58,9 +58,18 @@ SYSTEM = """당신은 한국어 발화의 비유창성(disfluency)을 분석하�
 6. incoherence — 문법은 맞으나 앞뒤 내용이 이어지지 않음
 
 규칙:
-- 실제로 나타난 것만 세세요. 애매하면 세지 마세요.
-- 각 마커마다 **전사 원문에서 그대로 인용한** 근거를 남기세요.
-- 근거는 마커당 최대 3개까지만.
+- 나타난 것은 **빠짐없이 모두** 세세요. 같은 마커가 여러 번 나오면 나온 횟수만큼 셉니다.
+- 근거는 **전사 원문에서 그대로 인용**하세요. 없는 표현을 지어내지 마세요.
+- 근거는 마커당 최대 3개만 적되, count는 실제 횟수 전부를 적으세요.
+
+예시 (이 정도 세밀도로 세세요):
+입력: "아니 , 이제 우리 , 저기 뭐야 거기 내 , 저기 뭐야 으 , 제가 즈 , 나 , 제 , 제가 저기 , 거기서 일하는 거 있어요 ."
+출력: {"particle_error": {"count": 0, "evidence": []},
+ "incomplete_ending": {"count": 0, "evidence": []},
+ "self_repair": {"count": 1, "evidence": ["제가 즈 , 나 , 제 , 제가"]},
+ "demonstrative_abuse": {"count": 3, "evidence": ["저기 뭐야 거기 내", "저기 뭐야 으", "저기 , 거기서"]},
+ "word_finding": {"count": 2, "evidence": ["저기 뭐야", "저기 뭐야"]},
+ "incoherence": {"count": 0, "evidence": []}}
 
 반드시 이 JSON만 출력 (한 줄, 문자열 안에 큰따옴표 금지):
 {"particle_error": {"count": 0, "evidence": []},
@@ -226,10 +235,15 @@ def debug_call() -> None:
     from src.common.llm import chat
     from src.preprocessing.kang_loader import load_kang
 
-    r = load_kang()[0]
+    recs = load_kang()
+    hc = recs[0]
+    mci = next((x for x in recs if x.label == "MCI"), recs[-1])
+    hc_chunk = _chunks([u.text for u in hc.par_utterances if u.text])[0]
+    mci_chunk = _chunks([u.text for u in mci.par_utterances if u.text])[1]
     samples = {
         "짧은 예문": "음 그거 있잖아 저거… 어제, 아니 그저께 병원에를 갔는데 뭐더라.",
-        f"실제 전사({r.subject_id}, {MAX_CHARS}자 제한)": r.par_text[:MAX_CHARS],
+        f"실제 MCI 청크({mci.subject_id})": mci_chunk,
+        f"실제 HC 청크({hc.subject_id})": hc_chunk,
     }
     for name, text in samples.items():
         print(f"\n{'=' * 60}\n[{name}] 입력 {len(text)}자")
