@@ -25,6 +25,42 @@ from pathlib import Path
 import numpy as np
 
 CACHE = Path("data/kang_stt.json")
+PAR_AUDIO_DIR = Path("data/kang_par_audio")
+
+
+def extract_par_audio(record, out_dir: Path = PAR_AUDIO_DIR) -> Path:
+    """gold 타임스탬프로 **참가자 구간만** 잘라 이어붙인 wav 생성.
+
+    왜: STT 화자 분리는 턴 경계에서 새어(실측: "드라마 제목이 어떻게 돼요?"의 뒷부분이
+        참가자로 오분류) 비유창성 비교를 흐린다. Kang은 .cha에 PAR 발화 시각이
+        정확히 있으므로, 그 구간만 잘라 넣으면 **화자 분리 자체가 불필요**하다.
+        (런타임에는 어르신 혼자 말하므로 이 문제가 없다 — Kang 인터뷰 특성)
+    """
+    import wave
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"{record.subject_id}.wav"
+    if out.exists():
+        return out
+
+    spans = [(u.start_ms, u.end_ms) for u in record.par_utterances
+             if u.start_ms is not None and u.end_ms is not None]
+    with wave.open(record.wav_path, "rb") as r:
+        sr, sw, ch = r.getframerate(), r.getsampwidth(), r.getnchannels()
+        n = r.getnframes()
+        frames = []
+        for s_ms, e_ms in spans:
+            a = max(0, int(s_ms / 1000 * sr))
+            b = min(n, int(e_ms / 1000 * sr))
+            if b > a:
+                r.setpos(a)
+                frames.append(r.readframes(b - a))
+    with wave.open(str(out), "wb") as w:
+        w.setnchannels(ch)
+        w.setsampwidth(sw)
+        w.setframerate(sr)
+        w.writeframes(b"".join(frames))
+    return out
 
 
 # ── WER ─────────────────────────────────────────────────────
@@ -44,7 +80,13 @@ def wer(ref: str, hyp: str) -> float:
 
 
 # ── 수집 ────────────────────────────────────────────────────
-def build(limit: int | None = None) -> dict:
+def build(limit: int | None = None, mode: str = "par") -> dict:
+    """STT 전사 수집.
+
+    mode:
+      'par'  — gold 타임스탬프로 참가자 구간만 잘라 전사 (권장, 화자 오분류 없음)
+      'full' — 원본 전체를 전사하고 화자 분리로 참가자 추출 (실제 런타임에 가까움)
+    """
     from src.common.stt import STTError, get_stt
     from src.preprocessing.kang_loader import load_kang
 
@@ -53,32 +95,35 @@ def build(limit: int | None = None) -> dict:
     recs = load_kang()[:limit] if limit else load_kang()
 
     for i, r in enumerate(recs, 1):
-        if r.subject_id in cache:
+        key = f"{r.subject_id}::{mode}"
+        if key in cache:
             continue
         try:
-            t = stt.transcribe(r.wav_path)
+            if mode == "par":
+                wav = extract_par_audio(r)
+                t = stt.transcribe(str(wav))
+                stt_utts = [u.text for u in t.utterances if u.text]
+                note = f"참가자 구간만 {wav.stat().st_size/1e6:.0f}MB"
+            else:
+                t = stt.transcribe(r.wav_path)
+                main = t.main_speaker()
+                stt_utts = [u.text for u in
+                            (t.by_speaker(main) if main is not None else t.utterances) if u.text]
+                note = f"화자 {t.speakers}, 주화자 {main}, 비중 {t.diarization_confidence():.0%}"
         except STTError as e:
             print(f"  [{i}/{len(recs)}] {r.subject_id} ⚠️ {str(e)[:100]}")
             continue
 
-        # ⚠️ Kang은 조사자(INV)+참가자(PAR) 인터뷰다. gold는 PAR만 쓰므로
-        #    STT도 **주 화자(가장 오래 말한 사람 = 참가자)** 만 골라야 공정한 비교가 된다.
-        main = t.main_speaker()
-        stt_utts = [u.text for u in (t.by_speaker(main) if main is not None else t.utterances)
-                    if u.text]
-
-        cache[r.subject_id] = {
+        cache[key] = {
+            "mode": mode,
             "label": r.label,
             "gold_text": r.par_text,
             "gold_utterances": [u.text for u in r.par_utterances if u.text],
             "stt_text": " ".join(stt_utts),
             "stt_utterances": stt_utts,
-            "stt_speakers": t.speakers,
-            "stt_main_speaker": main,
-            "stt_all_utterances": len(t.utterances),
         }
         print(f"  [{i}/{len(recs)}] {r.subject_id} gold {len(r.par_text)}자 / "
-              f"STT {len(' '.join(stt_utts))}자 (화자 {t.speakers}, 주화자 {main})")
+              f"STT {len(' '.join(stt_utts))}자 | {note}")
         CACHE.parent.mkdir(parents=True, exist_ok=True)
         CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
     return cache
@@ -89,11 +134,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--build", action="store_true")
     ap.add_argument("--limit", type=int)
+    ap.add_argument("--mode", choices=["par", "full"], default="par",
+                    help="par=참가자구간만(권장) / full=전체+화자분리")
     a = ap.parse_args()
 
     if a.build:
-        c = build(a.limit)
-        print(f"\n수집 완료: {len(c)}명 → {CACHE}")
+        c = build(a.limit, a.mode)
+        print(f"\n수집 완료: {len(c)}건 → {CACHE}")
         return
 
     if not CACHE.exists():
@@ -106,9 +153,12 @@ def main():
     )
 
     cache = json.loads(CACHE.read_text(encoding="utf-8"))
-    ids = sorted(cache)
+    ids = sorted(k for k in cache if cache[k].get("mode", "par") == a.mode)
+    if not ids:
+        raise SystemExit(f"mode={a.mode} 캐시 없음 — --build --mode {a.mode} 먼저 실행")
     y = np.array([1 if cache[i]["label"] == "MCI" else 0 for i in ids])
-    print(f"대상 {len(ids)}명 (HC {int((y==0).sum())} / MCI {int((y==1).sum())})\n")
+    print(f"[mode={a.mode}] 대상 {len(ids)}명 "
+          f"(HC {int((y==0).sum())} / MCI {int((y==1).sum())})\n")
 
     # 1) WER
     wers = [wer(cache[i]["gold_text"], cache[i]["stt_text"]) for i in ids]
