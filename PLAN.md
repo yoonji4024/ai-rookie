@@ -51,6 +51,13 @@
 - 🐛 **중요 버그 수정**: 여러 장면이 공통 키워드('미국')를 가지면 한 번 언급이 여러 장면에 매칭돼 **실제 누락을 정상 회상으로 오판**. → 고유 키워드만 규칙 매칭에 사용하도록 수정(모호하면 LLM/보류).
 - ⏭ 서버에서 실제 LLM으로 검증(`health_check` → 세션 실행), 영어 데이터는 확보 후.
 
+## 데모 시나리오 (정상형 vs MCI형) — 2026-07-21
+- `src/demo/tts.py`: NC **VARCO Voice** TTS 래퍼(국내 서비스, 규정 부합) + `TTSClient` 인터페이스. ⚠️ 엔드포인트 규격 미확정 → `_request()` 한 곳만 채우면 동작. 키/규격 없으면 `NullTTS` 폴백.
+- `src/demo/scenario.py`: 같은 콘텐츠를 본 두 사람 대조 데모. Solar가 **Kang 실측 차이 근거**로 회상 대본 생성 → 매칭·채점 → 실제 Kang 화자 음향점수 병행 → `docs/데모_시나리오.md`.
+- 결과(mock/내장대본): 정상형 커버리지 100%·누락 0 / MCI형 50%·누락 2. 발화점수 실제 HC_30 98점(정상) vs MCI_74 26점(심각).
+- **⚠️ TTS 한계 명시**: 합성 음성은 음질 저하(jitter·shimmer·HNR·CPP)를 재현 못 함 → 발음정확도 축은 **실제 Kang 화자 값 병행 표기**. 합성 데이터는 **분류기 학습에 미사용**(§7).
+- 🐛 중복 키워드 문제 재발 방지: 데모 대본 생성도 **고유 키워드만** 사용(장면 3·4의 '미국' 공유로 대조가 무너졌던 건 수정).
+
 ## NOW (이번 스프린트 — Kang 베이스라인)
 - [ ] (P0) Kang 로더 — `src/preprocessing/kang_loader.py`: .cha 파싱(발화·타임스탬프·라벨) + wav 매핑
 - [ ] (P0) 피처 추출 — extract_acoustic(librosa/parselmouth) / extract_linguistic(kiwipiepy)

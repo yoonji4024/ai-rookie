@@ -31,9 +31,13 @@ DRAFT_SYSTEM = """당신은 어르신과 함께 TV를 보는 친구입니다. �
 - 짧게(20자 내외).
 - 지금이 물어보기 애매하면 silence_ok를 true로 두세요.
 
-반드시 이 JSON만 출력:
+반드시 이 JSON만 출력 (설명·코드펜스 없이 JSON 하나만):
 {"candidates": [{"question": "...", "reason": "..."}], "silence_ok": true}
-후보는 최대 3개."""
+후보는 최대 3개.
+
+JSON 작성 규칙:
+- 문자열 안에 큰따옴표(")를 쓰지 마세요. 인용이 필요하면 작은따옴표를 쓰세요.
+- 줄바꿈 없이 한 줄로 쓰세요."""
 
 JUDGE_SYSTEM = """당신은 시청 방해를 판정하는 심판입니다. 아래 질문 후보 중
 지금 시점에 던져도 **시청을 방해하지 않는** 것을 고르세요.
@@ -43,8 +47,9 @@ JUDGE_SYSTEM = """당신은 시청 방해를 판정하는 심판입니다. 아�
 - 방금 장면이 끝났거나 전환 직후면 적절 → ask
 - 후보가 화면에 없는 내용을 묻으면 → silence
 
-반드시 이 JSON만 출력:
-{"action": "ask" 또는 "silence", "best_index": 0, "reason": "..."}"""
+반드시 이 JSON만 출력 (설명·코드펜스 없이 한 줄로):
+{"action": "ask" 또는 "silence", "best_index": 0, "reason": "..."}
+문자열 안에 큰따옴표(")를 쓰지 마세요."""
 
 
 def hard_block(context: dict) -> tuple[bool, str]:

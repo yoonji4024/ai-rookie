@@ -122,15 +122,39 @@ def chat_json(model: str, system: str, user: str, **kw) -> dict:
     return parse_json(raw)
 
 
+def _repair_json(s: str) -> str:
+    """LLM이 흔히 내는 JSON 오류 보정."""
+    s = re.sub(r",\s*([}\]])", r"\1", s)          # 후행 쉼표
+    s = s.replace("“", '"').replace("”", '"')      # 한글 따옴표
+    s = s.replace("‘", "'").replace("’", "'")
+    # 문자열 안의 실제 줄바꿈 → \n
+    s = re.sub(r'(?<!\\)\n(?=(?:[^"]*"[^"]*")*[^"]*"[^"]*$)', r"\\n", s)
+    return s
+
+
 def parse_json(text: str) -> dict:
+    """LLM 출력 → dict. 실패는 항상 LLMError로 올려 호출부가 처리하게 한다.
+
+    ⚠️ json.JSONDecodeError를 그대로 올리면 호출부의 `except LLMError`를 빠져나가
+       파이프라인 전체가 죽는다(실제로 A.X K1의 깨진 JSON 때문에 세션이 중단됨).
+    """
+    raw = text
     text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        m = re.search(r"[\{\[].*[\}\]]", text, re.S)
+
+    for candidate in (text, _repair_json(text)):
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            pass
+        m = re.search(r"[\{\[].*[\}\]]", candidate, re.S)
         if m:
-            return json.loads(m.group(0))
-        raise LLMError(f"JSON 파싱 실패: {text[:200]}")
+            for c in (m.group(0), _repair_json(m.group(0))):
+                try:
+                    return json.loads(c)
+                except json.JSONDecodeError:
+                    pass
+
+    raise LLMError(f"JSON 파싱 실패: {raw[:300]}")
 
 
 def health_check() -> dict[str, str]:
