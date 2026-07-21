@@ -82,6 +82,28 @@ def main():
     )
     print(f"\n   등급 단조성(정상→위험→심각으로 MCI 비율 증가): {'OK' if valid else '⚠️ 위배'}")
 
+    # ── 3-b) 등급 컷 탐색 — 단조성 + 균형을 만족하는 컷 후보 ──
+    print("\n3-b) 등급 컷 후보 탐색 (단조성 만족 & 각 등급 ≥8명)")
+    best = []
+    for hi in range(60, 86, 5):            # 정상 컷
+        for lo in range(30, hi - 4, 5):    # 심각 컷
+            g = np.where(total >= hi, 0, np.where(total >= lo, 1, 2))  # 0정상 1위험 2심각
+            counts = [int((g == k).sum()) for k in range(3)]
+            if min(counts) < 8:
+                continue
+            r = [float(y[g == k].mean()) for k in range(3)]
+            if r[0] <= r[1] <= r[2]:       # 단조 증가
+                # 정상 등급의 MCI 놓침(낮을수록 좋음) + 심각 등급 순도(높을수록 좋음)
+                best.append((r[2] - r[0], hi, lo, counts, r))
+    best.sort(reverse=True)
+    if best:
+        for gap, hi, lo, counts, r in best[:5]:
+            print(f"   정상≥{hi} 위험≥{lo}: 인원 {counts} | MCI비율 "
+                  f"{r[0]:.0%}→{r[1]:.0%}→{r[2]:.0%} (격차 {gap:.0%})")
+        print(f"   → 추천 컷: 정상≥{best[0][1]}, 위험≥{best[0][2]}")
+    else:
+        print("   ⚠️ 조건(단조성 & 최소 인원) 만족 컷 없음 — 표본 부족 가능")
+
     # ── 4) 데이터가 정한 방향 (직관과 반대인 것 표시) ────────
     m_all = ScoringModel.fit(X, y, names)
     print("\n4) 피처 방향 (데이터 기반)")
