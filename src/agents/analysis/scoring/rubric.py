@@ -27,6 +27,11 @@ AXES: dict[str, list[str]] = {
         "lg_filler_rate",      # 간투사(음/어) 비율
         "lg_repeat_rate",      # 인접 단어 반복
         "ac_pause_rate",       # 발화 내부 머뭇거림 빈도
+        # 한국어 비유창성 (형태소당 정규화, 길이편향 검사 통과)
+        # 이 3종 추가로 버벅임 축 AUC 0.690 → 0.879
+        "lg_krr_incomplete_ending_rate",   # 어미 미완성 (AUC 0.736)
+        "lg_krr_fragment_repeat_rate",     # 단음절 파편 반복 (0.726, MCI가 19배)
+        "lg_krr_demonstrative_rate",       # 지시어 남용 (0.692)
     ],
     "침묵 시간": [
         "ac_pause_ratio",

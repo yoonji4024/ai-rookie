@@ -101,6 +101,20 @@ def extract_linguistic(transcript: str, word_timings: list[dict] | None = None) 
         "repeat_rate": repeats / n if n else 0.0,
     }
 
+    # 한국어 비유창성 (규칙 기반, 형태소당 정규화)
+    # 길이 편향 검사를 통과한 3종만 사용 — 상세 근거는 korean_disfluency_rule.py
+    try:
+        from src.agents.analysis.features.korean_disfluency_rule import (
+            ROBUST_FEATURES, analyze as _kr_analyze, to_features as _kr_feats,
+        )
+        _utts = utt_texts if word_timings else [transcript]
+        _krf = _kr_feats(_kr_analyze(_utts), _utts)
+        feats.update({k: _krf[k] for k in ROBUST_FEATURES})
+    except Exception:
+        feats.update({k: 0.0 for k in
+                      ("krr_incomplete_ending_rate", "krr_fragment_repeat_rate",
+                       "krr_demonstrative_rate")})
+
     # 타이밍 기반: 발화 속도, 응답 특성
     if word_timings:
         durs, sylls, gaps = [], [], []
