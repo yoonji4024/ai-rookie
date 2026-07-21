@@ -68,8 +68,22 @@ def extract_par_audio(record, out_dir: Path = PAR_AUDIO_DIR) -> Path:
 
 
 # ── WER ─────────────────────────────────────────────────────
-def wer(ref: str, hyp: str) -> float:
+def _norm_for_wer(s: str) -> str:
+    """WER 비교용 정규화.
+
+    ⚠️ Kang gold는 CHAT 형식이라 문장부호가 띄어쓰기로 분리돼 있다("드라마 봤어요 .").
+       STT는 붙여 쓰므로 그대로 비교하면 **토큰 불일치로 WER이 부풀려진다.**
+       → 문장부호 제거 후 공백 정규화.
+    """
+    import re
+    s = re.sub(r"[.,!?…·\"'()\[\]]", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def wer(ref: str, hyp: str, normalize: bool = True) -> float:
     """단어 오류율 (편집거리 / 참조 단어수)."""
+    if normalize:
+        ref, hyp = _norm_for_wer(ref), _norm_for_wer(hyp)
     r, h = ref.split(), hyp.split()
     if not r:
         return 0.0
@@ -178,9 +192,18 @@ def main():
         print("⚠️ 한 클래스만 수집됨 — 판별력(AUC) 비교는 건너뜁니다.")
         print("   두 클래스를 모으려면: --build --limit N (양쪽에서 균등 추출)\n")
 
-    # 1) WER
-    wers = [wer(cache[i]["gold_text"], cache[i]["stt_text"]) for i in ids]
-    print(f"1) STT 정확도\n   WER 평균 {np.mean(wers):.3f} (중앙값 {np.median(wers):.3f})")
+    # ⚠️ 표본이 작으면 AUC가 크게 흔들린다 — 결론으로 쓰지 말 것
+    if len(ids) < 30:
+        print(f"⚠️ 표본 {len(ids)}명 — AUC는 한두 명에 크게 흔들립니다. "
+              f"방향 참고용으로만 보고, 결론은 표본을 늘린 뒤 내리세요.\n")
+
+    # 1) WER (문장부호 정규화 전/후 둘 다)
+    raw = [wer(cache[i]["gold_text"], cache[i]["stt_text"], normalize=False) for i in ids]
+    norm = [wer(cache[i]["gold_text"], cache[i]["stt_text"]) for i in ids]
+    print("1) STT 정확도")
+    print(f"   WER(원문 그대로) 평균 {np.mean(raw):.3f}")
+    print(f"   WER(문장부호 정규화) 평균 {np.mean(norm):.3f} (중앙값 {np.median(norm):.3f})")
+    print("   ※ Kang gold는 CHAT 형식이라 문장부호가 분리돼 있어, 정규화 값이 실제에 가깝다")
 
     # 2) 피처 보존율
     G, S = [], []
@@ -193,6 +216,10 @@ def main():
     print("\n2) 비유창성 마커 보존율 (STT / gold)")
     for j, k in enumerate(FEATURE_NAMES):
         g, s = G[:, j].mean(), S[:, j].mean()
+        if g == 0 and s == 0:
+            # 희소 신호는 소표본에 안 잡힌다 (예: 파편반복은 전체 77명 중 일부 MCI에만 존재)
+            print(f"   {k:30s} gold 0 → STT 0   (이 표본엔 미출현 — 희소 신호, 표본 확대 필요)")
+            continue
         keep = (s / g * 100) if g > 0 else float("nan")
         flag = "  ⚠️ 소실" if keep == keep and keep < 50 else ""
         print(f"   {k:30s} gold {g:.4f} → STT {s:.4f}  보존 {keep:5.1f}%{flag}")
