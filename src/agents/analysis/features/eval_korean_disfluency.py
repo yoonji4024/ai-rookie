@@ -56,6 +56,18 @@ def main():
     Xk, yk = X[keep], y[keep]
     print(f"대상 {len(keep)}명 (HC {int((yk==0).sum())} / MCI {int((yk==1).sum())})\n")
 
+    # ⚠️ 실패 데이터로 판정하지 않는다 — 전원 0이면 '마커 없음'이 아니라 '측정 실패'다.
+    n_err = sum(1 for sid in ids if kr.get(sid, {}).get("error"))
+    if n_err:
+        raise SystemExit(
+            f"⚠️ 호출 실패 {n_err}건 — 마커가 실제로 측정되지 않았습니다.\n"
+            "   믿:음 응답을 먼저 점검하세요:\n"
+            "     python3 -m src.agents.analysis.features.korean_disfluency --debug")
+    if not K.any():
+        raise SystemExit(
+            "⚠️ 모든 마커가 0 — 측정 실패이거나 프롬프트 미작동일 가능성이 높습니다.\n"
+            "   판정을 내리지 않고 중단합니다. --debug로 원시 응답을 확인하세요.")
+
     # ── 1) 마커별 단변량 AUC ──────────────────────────────
     print("1) 마커별 판별력 (단변량 AUC, 발화당 정규화)")
     for j, k in enumerate(kr_names):

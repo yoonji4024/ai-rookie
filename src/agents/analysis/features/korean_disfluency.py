@@ -69,16 +69,25 @@ def _empty() -> dict:
     return {m: {"count": 0, "evidence": []} for m in MARKERS}
 
 
-def analyze(transcript: str, n_utterances: int = 0) -> dict:
-    """전사 → 마커 카운트 + 근거. 실패 시 빈 결과(0)로 반환해 파이프라인은 계속 돈다."""
+def analyze(transcript: str, n_utterances: int = 0, raise_on_error: bool = False) -> dict:
+    """전사 → 마커 카운트 + 근거.
+
+    ⚠️ 실패를 조용히 0으로 되돌리면 **'호출 실패'와 '마커 없음'을 구분할 수 없다.**
+       (실제로 77명 전원 0이 나와 검증이 무의미해진 적 있음)
+       → 실패 시 결과에 '_error'를 남기고, raise_on_error=True면 예외를 올린다.
+    """
     text = transcript.strip()[:MAX_CHARS]
     if not text:
         return _empty()
     try:
         out = chat_json("midm", SYSTEM, f"[발화 전사]\n{text}\n\n마커를 찾아 JSON으로 답하세요.",
                         temperature=0.0)
-    except LLMError:
-        return _empty()
+    except LLMError as e:
+        if raise_on_error:
+            raise
+        r = _empty()
+        r["_error"] = str(e)[:300]
+        return r
 
     res = _empty()
     for m in MARKERS:
@@ -114,20 +123,30 @@ def build_cache(out: Path = CACHE, limit: int | None = None) -> dict:
     if limit:
         recs = recs[:limit]
 
+    n_fail = 0
     for i, r in enumerate(recs, 1):
         if r.subject_id in cache:
             continue
         m = analyze(r.par_text, len(r.par_utterances))
+        err = m.pop("_error", None)
         cache[r.subject_id] = {
             "label": r.label,
             "n_utterances": len(r.par_utterances),
             "markers": m,
             "features": to_features(m, len(r.par_utterances)),
+            **({"error": err} if err else {}),
         }
         total = sum(v["count"] for v in m.values())
-        print(f"  [{i}/{len(recs)}] {r.subject_id} ({r.label}) 마커 {total}개")
+        if err:
+            n_fail += 1
+            print(f"  [{i}/{len(recs)}] {r.subject_id} ⚠️ 실패: {err[:80]}")
+        else:
+            print(f"  [{i}/{len(recs)}] {r.subject_id} ({r.label}) 마커 {total}개")
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    if n_fail:
+        print(f"\n⚠️ {n_fail}/{len(recs)}건 호출 실패 — 마커 0은 '없음'이 아니라 '측정 실패'입니다.")
     return cache
 
 
@@ -135,11 +154,36 @@ def load_cache(path: Path = CACHE) -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+def debug_call() -> None:
+    """믿:음 원시 응답 확인 — 실패 원인(형식·길이·파라미터) 진단용."""
+    from src.common.llm import chat
+    from src.preprocessing.kang_loader import load_kang
+
+    r = load_kang()[0]
+    samples = {
+        "짧은 예문": "음 그거 있잖아 저거… 어제, 아니 그저께 병원에를 갔는데 뭐더라.",
+        f"실제 전사({r.subject_id}, {MAX_CHARS}자 제한)": r.par_text[:MAX_CHARS],
+    }
+    for name, text in samples.items():
+        print(f"\n{'=' * 60}\n[{name}] 입력 {len(text)}자")
+        try:
+            raw = chat("midm", SYSTEM, f"[발화 전사]\n{text}\n\n마커를 찾아 JSON으로 답하세요.",
+                       temperature=0.0)
+            print(f"원시 응답 ({len(raw)}자):\n{raw[:600]}")
+        except Exception as e:
+            print(f"⚠️ 호출 실패: {type(e).__name__}: {str(e)[:300]}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--build", action="store_true", help="Kang 전체 추출")
     ap.add_argument("--limit", type=int, help="처음 N명만")
+    ap.add_argument("--debug", action="store_true", help="믿:음 원시 응답 확인")
     a = ap.parse_args()
+
+    if a.debug:
+        debug_call()
+        return
 
     if a.build:
         c = build_cache(limit=a.limit)
