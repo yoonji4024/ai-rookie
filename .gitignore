@@ -34,6 +34,13 @@ data/*
 *.onnx
 models/
 
+# 자동 생성물 (실행할 때마다 갱신 → git 추적하면 pull 충돌)
+docs/데모_시나리오.md
+docs/샘플_리포트.md
+data/sessions/
+data/demo_audio/
+*.log
+
 # OS / notebook 출력
 .DS_Store
 notebooks/**/*.html
