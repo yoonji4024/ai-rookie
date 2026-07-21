@@ -13,11 +13,19 @@ venv/
 .env
 *.key
 
-# data: 실데이터·오디오·라벨 금지, 더미/샘플만 예외
+# data: 실데이터·오디오·라벨 전부 커밋 금지
+# ⚠️ macOS는 대소문자 미구분 → '!data/sample/' 예외가 실데이터 폴더 data/Sample/ 까지
+#    풀어버려 633MB push 실패한 적 있음. 예외는 dummy만 두고 이름을 명확히 한다.
 data/*
 !data/dummy/
-!data/sample/
 !data/.gitkeep
+
+# 미디어·오디오 (혹시 위 규칙을 빠져나가도 이중 차단)
+*.mp4
+*.wav
+*.mp3
+*.avi
+*.mov
 
 # 모델 산출물
 *.pkl

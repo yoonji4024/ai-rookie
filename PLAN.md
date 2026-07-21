@@ -28,6 +28,14 @@
   - **스코어링 파트 완료.** 총점 AUC 0.859 / 5축 전부 판별력 확보 / 등급 신뢰 / 솔라 검증 통과.
 - ⏭ 남은 것: 축 가중치 조정(선택 — 균등 vs 판별력 가중), **영어 DementiaBank Pitt 적용**.
 
+## 미디어 파이프라인 (Sample 데이터) — 2026-07-21 구현
+- **데이터 확보**: `data/Sample/` AI-Hub 방송콘텐츠 4편(뉴스·교양·문화·생활). mp4 + 라벨링 JSON(타임스탬프 전사 + 하이라이트: 구간·요약·키워드·user_query 6개).
+  → **DramaQA 대기 해소.** 이벤트 그래프 소스 확보.
+- `src/event_graph/sample_loader.py`: JSON → **EventGraph**(하이라이트=장면 노드, 시간순=정답 순서, 근거 transcript span 보존).
+- `src/agents/analysis/recall.py`: **score_recall_order()** — Kendall's tau + omission/reversal/intrusion/cue_dependency. CLAUDE.md §9 시그니처 준수. 6개 케이스 검증 통과.
+- `src/event_graph/extract_audio.py`: mp4 → 16kHz mono wav(ffmpeg). **기존 음향 파이프라인(51피처) 그대로 적용 확인**.
+- `src/event_graph/build_dataset.py`: 이벤트그래프 12장면 / 순서회상 질문 4개 / **질문 평가셋 72개** 생성 + 검증(시간순·비겹침·근거존재·채점기 정합) 전부 통과.
+
 ## NOW (이번 스프린트 — Kang 베이스라인)
 - [ ] (P0) Kang 로더 — `src/preprocessing/kang_loader.py`: .cha 파싱(발화·타임스탬프·라벨) + wav 매핑
 - [ ] (P0) 피처 추출 — extract_acoustic(librosa/parselmouth) / extract_linguistic(kiwipiepy)
