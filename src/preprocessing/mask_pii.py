@@ -62,6 +62,56 @@ def mask_file(path: Path) -> int:
     return total
 
 
+# ── LLM 보조 마스킹 (믿:음) — 기본 비활성 ────────────────────
+# ⚠️ 이 경로는 전사 텍스트를 외부 API로 전송한다.
+#    제공자 조건은 "시연 시 실명·기관 제거"이며, 그건 위의 로컬 규칙으로 충족된다.
+#    개인정보를 API로 내보내는 위험을 새로 만들 필요가 없으므로 **기본은 규칙만** 쓴다.
+#    (규칙이 놓친 걸 꼭 LLM으로 잡아야 할 때만, 규칙 1차 마스킹 후 옵트인으로 사용)
+LLM_SYSTEM = """다음 텍스트에서 개인정보를 찾아 정해진 태그로 바꾸세요.
+
+- 사람 이름 → [이름]
+- 병원·기관·연구실·센터·교수명 → [기관]
+- 생년월일·나이 노출(예: 47년생, 6월 2일) → [생년월일]
+- 전화번호·주소 → [연락처]
+
+규칙:
+- 이미 [이름], [기관] 등으로 치환된 부분은 그대로 두세요.
+- 개인정보가 아닌 일반 단어는 절대 바꾸지 마세요.
+- 원문의 다른 내용은 한 글자도 바꾸지 말고, 개인정보만 태그로 교체하세요.
+
+반드시 이 JSON만 출력: {"masked": "치환된 전체 텍스트"}"""
+
+
+def mask_text_llm(text: str) -> str:
+    """규칙으로 1차 마스킹된 텍스트를 믿:음이 재검. 실패 시 입력 그대로 반환.
+
+    ⚠️ **규칙 마스킹을 먼저 적용한 뒤** 호출해야 실명이 이미 빠진 상태로 API에 나간다.
+       (원문을 그대로 LLM에 보내면 실명이 외부로 전송됨)
+    """
+    from src.common.llm import LLMError, chat_json
+    try:
+        out = chat_json("midm", LLM_SYSTEM, text, temperature=0.0)
+        m = out.get("masked")
+        return m if isinstance(m, str) and m.strip() else text
+    except (LLMError, Exception):
+        return text
+
+
+def mask_file_hybrid(path: Path) -> tuple[int, int]:
+    """규칙 → LLM 2단계. (규칙 마스킹 건수, LLM이 추가 변경한 발화 수)."""
+    d = json.loads(path.read_text(encoding="utf-8"))
+    rule_n, llm_changed = 0, 0
+    for u in d.get("utterances", []):
+        t1, k = mask_text(u.get("text", ""))     # 1차: 규칙 (로컬)
+        rule_n += k
+        t2 = mask_text_llm(t1)                    # 2차: 믿:음 (이미 실명 빠진 상태)
+        if t2 != t1:
+            llm_changed += 1
+        u["text"] = t2
+    path.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    return rule_n, llm_changed
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default="data/clinical/stt")
