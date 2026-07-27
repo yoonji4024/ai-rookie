@@ -17,6 +17,8 @@
 from __future__ import annotations
 
 import argparse
+import csv
+from pathlib import Path
 
 import numpy as np
 from sklearn.metrics import roc_auc_score
@@ -30,6 +32,36 @@ from src.preprocessing.dementiabank_loader import load_dementiabank
 # Kang에서 검증된 주력 음향 지표 (방향 비교용)
 VOICE_KEYS = ["ac_hnr", "ac_cpp", "ac_shimmer_local", "ac_jitter_local",
               "ac_f0_mean", "ac_pause_ratio", "ac_voiced_seg_rate"]
+
+# 피처 캐시 — mp3_path별 벡터를 append. 중단·재실행에 강건
+CACHE = Path("data/dementiabank_en_features.csv")
+
+
+def _load_cache() -> tuple[dict[str, np.ndarray], list[str] | None]:
+    """{mp3_path: vec}, feature_names. 없으면 ({}, None)."""
+    if not CACHE.exists():
+        return {}, None
+    cache, names = {}, None
+    with open(CACHE, newline="", encoding="utf-8") as fh:
+        rd = csv.reader(fh)
+        header = next(rd, None)
+        if not header:
+            return {}, None
+        names = header[1:]                       # 0번은 mp3_path
+        for row in rd:
+            if len(row) == len(header):
+                cache[row[0]] = np.array([float(x) for x in row[1:]])
+    return cache, names
+
+
+def _append_cache(mp3_path: str, vec: np.ndarray, names: list[str]) -> None:
+    new = not CACHE.exists()
+    CACHE.parent.mkdir(parents=True, exist_ok=True)
+    with open(CACHE, "a", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        if new:
+            w.writerow(["mp3_path"] + list(names))
+        w.writerow([mp3_path] + [f"{v:.6g}" for v in vec])
 
 
 def _cv_auc(X, y, groups, n_splits=5):
@@ -58,14 +90,29 @@ def main():
         recs = recs[: a.limit]
     print(f"로드 {len(recs)}건 / 화자 {len({r.speaker_id for r in recs})}명. 음향 추출 시작…")
 
+    # 피처 캐시: 계산 즉시 CSV에 append → 중단돼도 진행 보존, 재실행 시 즉시 이어감
+    cache, cache_names = _load_cache()
+    if cache:
+        print(f"  캐시 {len(cache)}건 재사용")
+
     rows = []  # (corpus, speaker, label3, vec)
-    names = None
+    names = cache_names
+    done = 0
     for i, r in enumerate(recs, 1):
-        ac = extract_acoustic(r.mp3_path)
-        vec, names = build_feature_vector(ac, {})
+        if r.mp3_path in cache:
+            vec = cache[r.mp3_path]
+        else:
+            try:
+                ac = extract_acoustic(r.mp3_path)
+                vec, names = build_feature_vector(ac, {})
+            except Exception as e:            # 깨진 파일 하나가 전체를 막지 않게
+                print(f"  ! 스킵 {r.mp3_path}: {e}")
+                continue
+            _append_cache(r.mp3_path, vec, names)
+            done += 1
         rows.append((r.corpus, r.speaker_id, r.label3, vec))
         if i % 100 == 0:
-            print(f"  피처 {i}/{len(recs)}")
+            print(f"  피처 {i}/{len(recs)} (신규 {done})")
 
     ac_idx = [i for i, n in enumerate(names) if n.startswith("ac_")]
     names = [names[i] for i in ac_idx]
