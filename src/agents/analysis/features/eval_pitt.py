@@ -24,7 +24,9 @@ from sklearn.model_selection import StratifiedGroupKFold
 from src.agents.analysis.classifier import make_xgb
 from src.agents.analysis.features.build_vector import build_feature_vector
 from src.agents.analysis.features.extract_acoustic import extract_acoustic
-from src.preprocessing.pitt_loader import load_pitt, prepare_wav
+from src.preprocessing.pitt_loader import load_pitt
+
+# librosa가 mp3를 직접 읽으므로 wav 변환 불필요 (mp3 경로 그대로 extract_acoustic에 넣음)
 
 # 음향(ac_*)만. Kang에서 검증된 주력 지표
 VOICE_KEYS = ["ac_hnr", "ac_cpp", "ac_shimmer_local", "ac_jitter_local", "ac_f0_mean",
@@ -43,11 +45,10 @@ def main():
         c = [r for r in recs if r.label == "Control"][: a.limit // 2]
         d = [r for r in recs if r.label == "Dementia"][: a.limit // 2]
         recs = c + d
-    prepare_wav(recs)
 
     X, y, groups, names = [], [], [], None
     for i, r in enumerate(recs, 1):
-        ac = extract_acoustic(r.wav_path)             # 전사 없음 → 전체 오디오
+        ac = extract_acoustic(r.mp3_path)             # mp3 직접(librosa) · 전사 없어 전체 오디오
         vec, names = build_feature_vector(ac, {})     # 언어 피처 없이 음향만
         X.append(vec)
         y.append(0 if r.label == "Control" else 1)    # 이진: 정상 vs 치매
