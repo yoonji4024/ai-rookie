@@ -164,12 +164,32 @@ def _mfcc_features(y: np.ndarray, sr: int, n_mfcc: int = 13) -> dict:
     return out
 
 
+def _load_audio(path: str) -> tuple["np.ndarray", int]:
+    """오디오 로드. **이미 목표 샘플레이트인 wav는 soundfile로 직접 읽는다.**
+
+    librosa.load는 파일이 이미 16kHz여도 디코딩·리샘플 경로를 타서 느리다
+    (60초 wav 기준 2.9초 — 전체 추출 시간 4.5초의 65%가 여기였다).
+    soundfile은 같은 파일을 0.01초대에 읽는다. 포맷이 다르면 librosa로 폴백.
+    """
+    try:
+        import soundfile as sf
+        info = sf.info(path)
+        if info.samplerate == SR:
+            y, sr = sf.read(path, dtype="float32", always_2d=False)
+            if getattr(y, "ndim", 1) > 1:
+                y = y.mean(axis=1)
+            return np.asarray(y, dtype=np.float32), sr
+    except Exception:
+        pass
+    return librosa.load(path, sr=SR, mono=True)
+
+
 def extract_acoustic(
     audio_path: str,
     segments: list[tuple[float, float]] | None = None,
 ) -> dict:
     """음향 피처 딕셔너리. segments = PAR 발화 (start_s, end_s) 목록."""
-    y, sr = librosa.load(audio_path, sr=SR, mono=True)
+    y, sr = _load_audio(audio_path)
     chunks = _par_audio(y, sr, segments)
     par = np.concatenate(chunks)
 

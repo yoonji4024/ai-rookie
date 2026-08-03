@@ -37,12 +37,39 @@ from src.api.schema import (
 
 app = FastAPI(title="AI Rookie 채점 API", version="0.1.0")
 
+# .env를 프로세스 환경에 올린다. STT(AXSTT)는 os.environ을 직접 읽으므로
+# llm 모듈이 먼저 import되지 않으면 키를 못 찾는다 → 서버 기동 시 한 번 로드.
+try:
+    from src.common.llm import load_env
+    load_env()
+except Exception:
+    pass
+
 # 개발 중 Vite(5173)에서 직접 호출 허용. 배포 시 도메인 제한할 것.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_methods=["*"], allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def _warmup():
+    """librosa(numba) JIT 컴파일을 기동 시 끝낸다.
+
+    첫 호출에 수 초가 붙는데 계산이 아니라 컴파일 비용이다. 미리 태우지 않으면
+    **첫 사용자 요청만 유독 느려진다**(시연에서 그 한 번이 하필 첫 요청).
+    """
+    try:
+        import librosa
+        import numpy as _np
+        d = _np.zeros(16000, dtype=_np.float32)
+        librosa.feature.mfcc(y=d, sr=16000, n_mfcc=13)
+        librosa.feature.zero_crossing_rate(d)
+        librosa.feature.rms(y=d)
+        _load_model()          # 참조분포도 미리 로드
+    except Exception:
+        pass
+
 
 MODEL_PATH = Path("configs/scoring_model.json")
 CONTENT_MODEL_PATH = Path("configs/scoring_model_content.json")
@@ -63,13 +90,39 @@ def _load_model():
 
 
 def _factors(axes: dict, order: list[str]) -> list[ScoreFactor]:
-    """점수 dict → 프론트 순서대로 정렬된 factor 배열."""
+    """점수 dict → 프론트 순서대로 정렬된 factor 배열.
+
+    NaN 방어: 피처 하나가 NaN이면 축 z가 NaN이 되고 int(nan)이 예외를 던진다
+    (예: 무음 구간이라 praat이 음질 계산에 실패). 화면이 통째로 죽는 것보다
+    해당 축을 0으로 표시하는 편이 낫다.
+    """
+    import math
     out = []
     for label in order:
         v = axes.get(label)
-        score = (v.get("score") if isinstance(v, dict) else v) if v is not None else 0
-        out.append(ScoreFactor(label=label, score=int(round(float(score)))))
+        raw = (v.get("score") if isinstance(v, dict) else v) if v is not None else 0
+        try:
+            s = float(raw)
+            s = 0.0 if math.isnan(s) or math.isinf(s) else s
+        except (TypeError, ValueError):
+            s = 0.0
+        out.append(ScoreFactor(label=label, score=int(round(min(max(s, 0), 100)))))
     return out
+
+
+def _stt(path: str) -> str:
+    """A.X STT로 전사. 참가자(주 화자) 발화만 뽑는다.
+
+    text·main_speaker는 property라 괄호 없이 접근한다.
+    런타임은 사용자 혼자 말하므로 화자가 1명이지만, 잡음으로 분리가 갈릴 수 있어
+    최장 화자만 취한다.
+    """
+    from src.common.stt import AXSTT
+    tr = AXSTT().transcribe(path)
+    main = tr.main_speaker
+    if main is None:
+        return tr.text
+    return " ".join(u.text for u in tr.by_speaker(main) if u.text)
 
 
 def _health() -> dict:
@@ -94,7 +147,29 @@ async def make_report(
     answers: str = Form(..., description="AnswerIn[] JSON 문자열"),
     patientName: str | None = Form(None),
     patientBirthDate: str | None = Form(None),
+    contentId: str | None = Form(None, description="시청 콘텐츠 ID (회상 축 채점에 필요)"),
     audio: list[UploadFile] = File(default=[]),
+):
+    """예외가 나도 500 대신 목업을 돌려준다 — 시연 중 화면이 죽지 않게."""
+    try:
+        return await _make_report(answers, patientName, patientBirthDate, audio, contentId)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()          # 서버 콘솔에는 전체 트레이스백을 남긴다
+        try:
+            items = json.loads(answers)
+        except Exception:
+            items = []
+        return _mock_report(patientName, patientBirthDate, items,
+                            note=f"채점 실패({type(e).__name__}: {e}) — 목업 반환")
+
+
+async def _make_report(
+    answers: str,
+    patientName: str | None,
+    patientBirthDate: str | None,
+    audio: list[UploadFile],
+    contentId: str | None = None,
 ):
     """세션 오디오 + 응답 → 리포트.
 
@@ -129,15 +204,16 @@ async def make_report(
     acoustic = extract_acoustic(str(main_audio))
 
     # ── 3) 응답 텍스트 (없으면 STT) ─────────────────────────
+    stt_error = ""
     for it in items:
         if not it.get("userAnswer"):
             fn = it.get("audioFilename")
             if fn and fn in saved:
                 try:
-                    from src.common.stt import transcribe
-                    it["userAnswer"] = transcribe(str(saved[fn]))
-                except Exception:
+                    it["userAnswer"] = _stt(str(saved[fn]))
+                except Exception as e:      # STT 실패해도 음향 채점은 계속한다
                     it["userAnswer"] = ""
+                    stt_error = f"STT 실패: {type(e).__name__}: {e}"
 
     # ── 4) 언어 피처 + 채점 ─────────────────────────────────
     transcript = " ".join(it.get("userAnswer", "") for it in items)
@@ -156,13 +232,32 @@ async def make_report(
         factors=_factors(axes, SPEECH_AXES),
     )
 
-    # 내용 점수 — 회상 응답 기반. 모델 없으면 축 순서만 유지해 0으로 채움
+    # 내용 점수 — 전사 기반 3축(참조분포) + 회상 기반 2축(이벤트 그래프 정답 대비)
     content_axes: dict = {}
+    recall_out: dict | None = None
     if CONTENT_MODEL_PATH.exists():
         try:
             from src.agents.analysis.scoring.score_content import ContentScoringModel
             cm = ContentScoringModel.load(str(CONTENT_MODEL_PATH))
-            content_axes = cm.score_one(transcript).get("axes", {})
+
+            # contentId가 오면 회상 축까지 채운다. 없으면 전사 3축만.
+            n_scenes = 0
+            if contentId and transcript.strip():
+                try:
+                    from src.agents.analysis.recall import score_recall_order
+                    from src.agents.analysis.response_matcher import match_response
+                    from src.event_graph.sample_loader import load_all
+                    graph = {g.content_id: g for g in load_all()}.get(contentId)
+                    if graph is not None:
+                        n_scenes = len(graph.nodes)
+                        m = match_response(transcript, graph, use_llm=False)
+                        recall_out = score_recall_order(m.get("scene_order", []), graph)
+                        recall_out["scene_order"] = m.get("scene_order", [])
+                except Exception:
+                    recall_out = None
+
+            content_axes = cm.score_all(vec, recall=recall_out,
+                                        n_scenes=n_scenes).get("axes", {})
         except Exception:
             content_axes = {}
     content = ScoreCategory(
@@ -174,7 +269,9 @@ async def make_report(
     interp = None
     try:
         from src.agents.analysis.scoring.interpret import interpret_scores
-        out = interpret_scores(scored)
+        # max_retries=1: 생성→검증→(실패 시)재생성 1회까지.
+        # 서빙 경로라 응답 시간이 중요하다. 재시도를 늘리면 LLM 호출이 곱으로 늘어난다.
+        out = interpret_scores(scored, max_retries=1)
         rep, v = out["report"], out.get("verify") or {}
         interp = Interpretation(
             summary=rep.get("summary", ""),
@@ -187,6 +284,10 @@ async def make_report(
         )
     except Exception as e:
         interp = Interpretation(summary="", caveats=f"해석 생성 실패: {e}", verified=False)
+
+    # STT가 실패했으면 사유를 리포트에 남긴다 — 언어·내용 축이 0으로 나온 이유가 됨
+    if stt_error:
+        interp.caveats = (interp.caveats + " / " if interp.caveats else "") + stt_error
 
     questions = _rank_questions(items)
     return ReportResponse(
@@ -238,3 +339,25 @@ def _mock_report(name, birth, items, note="") -> ReportResponse:
 def mock():
     """프론트 개발용 — 서버 붙기 전에도 같은 스키마로 렌더 확인 가능."""
     return _mock_report("김순자", "1948-03-12", [])
+
+
+LIVE_ROOT = Path("data/live")
+
+
+@app.get("/api/report/latest", response_model=ReportResponse)
+def latest():
+    """가장 최근 세션의 실제 채점 결과.
+
+    시연용 경로: 앞에서 녹음·채점하면(`session_record.py`) 세션 폴더에 report.json이
+    남는다. 프론트가 이 엔드포인트를 부르면 **방금 녹음한 사람의 실제 점수**가 화면에 뜬다.
+    세션이 없으면 목업으로 폴백하므로 화면이 비지 않는다.
+    """
+    reports = sorted(LIVE_ROOT.glob("*/report.json"),
+                     key=lambda p: p.stat().st_mtime, reverse=True)
+    if not reports:
+        return _mock_report(None, None, [], note="저장된 세션 없음 — 목업")
+    try:
+        d = json.loads(reports[0].read_text(encoding="utf-8"))
+        return ReportResponse(**d)
+    except Exception as e:
+        return _mock_report(None, None, [], note=f"세션 읽기 실패({e}) — 목업")

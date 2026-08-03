@@ -91,11 +91,20 @@ def _allowed_numbers(score_result: dict, evidences: list[Evidence]) -> set[float
             for key in ("score", "점수"):
                 if key in v:
                     ok.add(float(v[key]))
+            # 측정값은 {"value":…, "hc_mean":…, "z":…} 같은 dict다.
+            # float()를 바로 걸면 전부 예외로 걸러져 인용 가능한 수치가 비고,
+            # 리포트가 정확한 측정값을 인용해도 '근거 없는 수치'로 오판된다.
             for feat, fv in (v.get("features") or v.get("측정값") or {}).items():
-                try:
-                    ok.add(round(float(fv), 3))
-                except (TypeError, ValueError):
-                    pass
+                cands = fv.values() if isinstance(fv, dict) else [fv]
+                for c in cands:
+                    try:
+                        f = float(c)
+                    except (TypeError, ValueError):
+                        continue
+                    ok.add(f)
+                    ok.add(round(f, 4))
+                    ok.add(round(f, 3))
+                    ok.add(round(f, 2))     # 리포트가 반올림해 인용하는 경우
         else:
             try:
                 ok.add(float(v))
@@ -205,8 +214,10 @@ def llm_entailment_check(report: dict, evidences: list[Evidence],
                 "note": "mock 모드 — LLM 대조 생략"}
     try:
         from src.common.llm import chat
+        # 검증은 보조 단계다. 여기서 오래 물리면 리포트 전체가 늦어지므로
+        # 짧은 timeout·재시도 1회로 제한하고, 실패하면 미검증으로 표시만 한다.
         raw = chat(model, VERIFY_SYSTEM, _build_verify_prompt(report, evidences),
-                   temperature=0.0)
+                   temperature=0.0, timeout=40, retries=1)
         out = _parse_json(raw)
         if not out:
             return {"pass": False, "error": "검증자 JSON 파싱 실패", "raw": raw[:300]}

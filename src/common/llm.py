@@ -111,7 +111,10 @@ def chat(
     system: str,
     user: str,
     temperature: float = 0.0,
-    timeout: int = 30,
+    # 90초: Friendli 전용 엔드포인트(EXAONE·믿:음)는 콜드 스타트가 있어 30초로는
+    # 첫 호출이 자주 타임아웃된다. 검증 단계가 이것 때문에 실패하면 리포트 전체가
+    # 미검증으로 떨어지므로 넉넉히 잡는다.
+    timeout: int = 90,
     max_tokens: int | None = None,
     retries: int = 3,
 ) -> str:

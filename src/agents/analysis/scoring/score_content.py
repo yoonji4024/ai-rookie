@@ -46,6 +46,27 @@ class ContentScoringModel:
                 m.direction[f] = 1.0 if hc[:, i].mean() >= mci[:, i].mean() else -1.0
         return m
 
+    # ── 저장 / 로드 ─────────────────────────────────────────
+    # 참조분포만 담으면 되므로 JSON으로 충분. 서빙 시 재학습하지 않기 위해 필요.
+    def save(self, path: str) -> None:
+        import json
+        from pathlib import Path
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({
+            "feature_names": self.feature_names,
+            "hc_mean": self.hc_mean,
+            "hc_std": self.hc_std,
+            "direction": self.direction,
+        }, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    @classmethod
+    def load(cls, path: str) -> "ContentScoringModel":
+        import json
+        d = json.loads(open(path, encoding="utf-8").read())
+        return cls(feature_names=d["feature_names"], hc_mean=d["hc_mean"],
+                   hc_std=d["hc_std"], direction=d["direction"])
+
     def score_transcript_axes(self, x: np.ndarray) -> dict:
         idx = {n: i for i, n in enumerate(self.feature_names)}
         out = {}

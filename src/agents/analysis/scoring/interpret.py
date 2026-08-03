@@ -141,7 +141,10 @@ def interpret_scores(score_result: dict, k: int = 3,
             if last_v.get("issues"):
                 fb = ("\n\n[이전 시도의 문제 — 반드시 수정하세요]\n"
                       + "\n".join(f"- {i}" for i in last_v["issues"]))
-            report = _parse_json(chat("solar", INTERPRET_SYSTEM, user + fb, temperature=0.2))
+            # timeout·retries를 명시한다. chat()의 기본 retries=3과 긴 timeout이
+            # 곱해지면 한 호출에 수 분이 걸려 전체가 멈춘다(실제 10분 초과 발생).
+            report = _parse_json(chat("solar", INTERPRET_SYSTEM, user + fb,
+                                      temperature=0.2, timeout=40, retries=1))
 
         if not verify:
             return {"report": report, "evidence": {a: [e.id for e in v] for a, v in ev_by_axis.items()},

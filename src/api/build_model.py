@@ -24,6 +24,7 @@ OUT = Path("configs/scoring_model.json")
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--out-content", default="configs/scoring_model_content.json")
     a = ap.parse_args()
 
     from src.agents.analysis.features.build_vector import build_feature_vector
@@ -54,11 +55,19 @@ def main():
 
     m = ScoringModel.fit(X, y, names)
     m.save(a.out)
-    print(f"저장: {a.out}  (참조분포 {len(m.hc_mean)}개 피처)")
+    print(f"저장: {a.out}  (발화 참조분포 {len(m.hc_mean)}개 피처)")
 
     # 방향이 직관과 반대인 피처 — 설계 근거로 자주 인용되므로 같이 출력
     neg = [f for f, d in m.direction.items() if d < 0]
     print(f"'낮을수록 정상'으로 학습된 피처 {len(neg)}개: {neg[:8]}")
+
+    # 내용 축(전사 기반 3축)도 같은 데이터로 참조분포를 만든다.
+    # 회상 기반 2축(문맥 일치도·기억 정확도)은 이벤트 그래프 정답 대비 직접 환산하므로
+    # 참조분포가 필요 없다 → 런타임에 recall 결과로 계산.
+    from src.agents.analysis.scoring.score_content import ContentScoringModel
+    cm = ContentScoringModel.fit(X, y, names)
+    cm.save(a.out_content)
+    print(f"저장: {a.out_content}  (내용 참조분포 {len(cm.hc_mean)}개 피처)")
 
 
 if __name__ == "__main__":

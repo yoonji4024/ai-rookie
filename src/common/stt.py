@@ -34,6 +34,19 @@ from src.common.llm import load_env
 load_env()
 
 BASE = os.environ.get("AX_STT_BASE", "https://awf-gw.adot.ai")
+# STT_DEBUG=1 → 각 단계의 응답 원문 출력. 응답 스키마가 문서와 다를 때 추적용.
+STT_DEBUG = os.environ.get("STT_DEBUG") == "1"
+
+
+def _safe_json(r) -> dict:
+    """본문이 비었거나 JSON이 아니어도 죽지 않는다. 실패 시 빈 dict."""
+    if not (r.text or "").strip():
+        return {}
+    try:
+        d = r.json()
+        return d if isinstance(d, dict) else {"_raw": d}
+    except Exception:
+        return {}
 WS_BASE = os.environ.get("AX_STT_WS", "wss://awf-gw.adot.ai")
 MODEL_BATCH = "A.X_STT_note_batch"
 MODEL_STREAM = "A.X_STT_note_streaming"
@@ -108,23 +121,60 @@ class AXSTT:
                          headers=self.headers, timeout=60)
         if not r.ok:
             raise STTError(f"토큰 발급 실패 {r.status_code}: {r.text[:200]}")
-        tok = r.json().get("upload_token")
+        d = _safe_json(r)
+        if STT_DEBUG:
+            print(f"  [debug] upload-token {r.status_code} → {str(d)[:200]}")
+        self._token_body = d                     # 업로드 응답이 비었을 때 참조
+        tok = d.get("upload_token") or d.get("uploadToken")
         if not tok:
             raise STTError(f"upload_token 없음: {r.text[:200]}")
         return tok
 
     def _upload(self, token: str, path: Path) -> str:
-        with open(path, "rb") as f:
-            r = requests.put(
-                f"{BASE}/v1/stt/upload/{token}",
-                headers={**self.headers, "Content-Type": "application/octet-stream"},
-                data=f, timeout=self.timeout,
-            )
-        if not r.ok:
-            raise STTError(f"업로드 실패 {r.status_code}: {r.text[:200]}")
-        key = r.json().get("file_key")
-        if not key:
-            raise STTError(f"file_key 없음: {r.text[:200]}")
+        """업로드 후 file_key 확보.
+
+        ⚠️ 이 엔드포인트는 성공(2xx)해도 **본문이 비어 있을 수 있다.**
+           r.json()을 무조건 부르면 JSONDecodeError로 죽는다(실제 발생).
+           본문이 없으면 토큰 발급 응답의 file_key, 그것도 없으면 토큰 자체를 쓴다.
+        """
+        # ⚠️ 파일 객체를 data=로 넘기면 requests가 Transfer-Encoding: chunked 를 쓴다.
+        #    이 경로 앞단의 WAF가 chunked 업로드를 거부한다("Request Rejected" HTML).
+        #    바이트로 읽어 Content-Length를 명시해야 통과한다.
+        raw = path.read_bytes()
+        url = f"{BASE}/v1/stt/upload/{token}"
+
+        def _put(headers: dict):
+            return requests.put(url, headers=headers, data=raw, timeout=self.timeout)
+
+        attempts = [
+            {**self.headers, "Content-Type": "application/octet-stream",
+             "Content-Length": str(len(raw))},
+            # WAF가 인증 헤더나 octet-stream을 문제 삼는 경우 대비
+            {"Content-Type": "audio/wav", "Content-Length": str(len(raw))},
+        ]
+        r = None
+        for i, h in enumerate(attempts, 1):
+            r = _put(h)
+            rejected = "Request Rejected" in (r.text or "")
+            if STT_DEBUG:
+                print(f"  [debug] upload 시도{i} {r.status_code} "
+                      f"{'WAF 거부' if rejected else 'OK'} body={r.text[:120]!r}")
+            if r.ok and not rejected:
+                break
+        if r is None or not r.ok:
+            raise STTError(f"업로드 실패 {getattr(r,'status_code','?')}: {getattr(r,'text','')[:200]}")
+        if "Request Rejected" in (r.text or ""):
+            raise STTError(
+                "업로드가 WAF에 거부됨(Request Rejected). "
+                "네트워크(사내망·VPN·프록시)를 바꿔 재시도하거나 SKT에 support ID로 문의 필요. "
+                f"응답: {r.text[:150]}")
+
+        d = _safe_json(r)
+
+        key = (d.get("file_key") or d.get("fileKey")
+               or getattr(self, "_token_body", {}).get("file_key")
+               or getattr(self, "_token_body", {}).get("fileKey")
+               or token)                          # 최후: 토큰이 곧 키인 설계
         return key
 
     def _transcript(self, file_key: str, keywords: list[str] | None = None) -> dict:
