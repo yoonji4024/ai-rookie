@@ -1,12 +1,13 @@
 # PLAN — 미디어 시청 기반 인지 스크리닝 작업 보드
 
 > 작업 상태 전용. **설계 진실은 CLAUDE.md, 지금 뭐 할지는 여기.**
-> 갱신일: 2026-07-16. (프로젝트 피벗 반영, Kang 데이터 실험 스프린트 시작)
+> 갱신일: 2026-07-29. (3언어 교차검증 완료, 근거기반 해석·검증 파이프라인 추가)
 
 ---
 
 ## 환경 상태 (코딩 전 확인)
-- 데이터: **Kang 코퍼스 확보** (HC 37 / MCI 40, wav+cha) — HC vs MCI 즉시 실험 가능. AI-Hub 217은 여전히 IRB/안심존 대기.
+- 데이터: **DementiaBank Korean**(HC 37/MCI 40) + **English/Chinese**(Pitt·Delaware·Lu, 라벨 CSV 확보) + 임상 KCL 4명 + Sample 4편.
+  **AI-Hub 217·DramaQA는 사용하지 않음 — 확정.**
 - GPU: **GPU Live A100 가용** (7/15~8/14). 인터랙티브(Jupyter/SSH) 또는 배치. ⚠️ 결과는 스토리지에만 보존, 유휴 회수 주의.
 - 로컬 환경: venv에 requirements 미설치 상태 → 설치 필요. git 저장소 미초기화.
 - 마감: 본선 제출 **8/14 17:00**.
@@ -30,7 +31,7 @@
 
 ## 미디어 파이프라인 (Sample 데이터) — 2026-07-21 구현
 - **데이터 확보**: `data/Sample/` AI-Hub 방송콘텐츠 4편(뉴스·교양·문화·생활). mp4 + 라벨링 JSON(타임스탬프 전사 + 하이라이트: 구간·요약·키워드·user_query 6개).
-  → **DramaQA 대기 해소.** 이벤트 그래프 소스 확보.
+  → 이벤트 그래프 소스 확보 (외부 데이터셋 불필요).
 - `src/event_graph/sample_loader.py`: JSON → **EventGraph**(하이라이트=장면 노드, 시간순=정답 순서, 근거 transcript span 보존).
 - `src/agents/analysis/recall.py`: **score_recall_order()** — Kendall's tau + omission/reversal/intrusion/cue_dependency. CLAUDE.md §9 시그니처 준수. 6개 케이스 검증 통과.
 - `src/event_graph/extract_audio.py`: mp4 → 16kHz mono wav(ffmpeg). **기존 음향 파이프라인(51피처) 그대로 적용 확인**.
@@ -200,12 +201,27 @@ UI 스펙: 단어 수준 / 문맥 일치도 / 기억 정확도 / 시간·장소 
 - [ ] (P2) MLP 실험 (GPU Live에서), 피처 ablation (음향 vs 언어 vs 결합)
 - [ ] (P2) A.X STT batch 전사 → STT 기반 언어 피처 vs gold 전사 비교 (도메인 시프트 정량화)
 - [ ] (P2) 리포트 생성(Solar) 프롬프트 골격
+- [ ] (배포 단계 — 본선 제출엔 불필요) 데모 프론트엔드 연동 API
+
+## 데모 프론트엔드 (`../Rookie_2026_DEMO`) — 2026-07-29 확인
+별 레포. **ai-rookie와 형제 디렉토리로 클론** (레포 중첩 금지). React 18 + TS + Vite.
+- **채점 체계가 우리와 일치** — 발화 5축(버벅임·침묵시간·발화속도·발음정확도·문장완성도)이
+  `rubric.py`와 이름까지 동일. 내용 5축도 `rubric_content.py`와 동일. 0~100 척도 동일.
+  → 나중에 붙일 때 매핑 변환 불필요. 제안서에 "프론트·백엔드 동일 채점 체계" 근거로 쓸 수 있음.
+- 현재 목업 데이터 하드코딩. **연동 지점 3곳**만 교체하면 됨:
+  - `src/components/DramaScenePlayer.tsx` `simulateASR()` → A.X STT
+  - `src/components/GuardianDramaReport.tsx` `SPEECH_SCORE`·`CONTENT_SCORE` 상수 → 채점 API
+  - 같은 파일 `SCORE_TREND` → 검사 이력 API
+- 프론트가 기대하는 형태: `{label, score}[]` (축별), 질문별 `{rank, impact, question, correctAnswer, userAnswer, videoTimestamp}`.
+- VARCO TTS/Face는 Vite dev 프록시로 중계 (CORS 회피 + 키를 브라우저 번들에서 격리). 키는 `.env`의 `VARCO_TTS_KEY`.
+- ⚠️ 공용·공개 가능 레포 → **API 키 커밋 금지.** 프론트에서 국내 LLM 직접 호출은 키 노출이라 금지, 백엔드 경유.
 
 ## BLOCKED / 대기
-- [ ] AI-Hub 217 IRB·안심존 (불발 시 DementiaBank 전환)
-- [ ] DramaQA 접근 승인
-- [ ] 순서 점수 ↔ 분류기 score 결합 규칙
-- [ ] A.X STT disfluency 보존 여부 확인
+- [ ] **파일럿 세션 녹음 5건** — 순서 회상 축 검증·결합 규칙·런타임 참조분포에 전부 필요. 최우선.
+- [ ] 정상 노인 참조 데이터 5~10명 (런타임과 같은 편한 대화 조건) — 점수 기준선 보정
+- [ ] 순서 점수 ↔ 분류기 score 결합 규칙 (파일럿 확보 후 결정)
+- [ ] A.X STT 단어 타임스탬프 제공 여부 + disfluency 보존 (실제 응답 JSON 1건 필요)
+- [ ] 근거 코퍼스 임상 7건 참고문헌 (`src/rag/corpus.py` cite 비어있음 — 팀 확인 필요)
 
 ---
 
@@ -240,3 +256,19 @@ UI 스펙: 단어 수준 / 문맥 일치도 / 기억 정확도 / 시간·장소 
   - 전체 0.889 (0.894와 동일, 피처 6개↓로 더 강건). CPP 60초 샘플 유효(voice 그룹 0.728 유지).
   - ⚠️ 추출 여전히 ~9.7분(581s) — 잔여 병목은 전체오디오 pitch/jitter/shimmer/HNR. 반복 잦으면 이것도 캡 검토.
   - **음향 모듈 정리 완료: pause(0.783)·tempo(0.744)·음질(0.728)·MFCC(0.761), 발화량 교란은 ablation으로 방어(0.813).**
+- 2026-07-29 (**3언어 교차언어 검증 완료** — 서버): 영어·중국어 DementiaBank에 음향 51피처 그대로 적용.
+  - 라벨 확보 경로: 오디오는 media.talkbank.org(`?f=save`), **라벨은 로컬 전사 zip의 @ID 6번째 필드** → `dementiabank_labels.py` → CSV 1,760명(정상 552/MCI 317/치매 891).
+  - **코퍼스 내 정상 vs 치매(음향만, 화자단위 5-fold): Pitt(영) 0.765 · Lu(중) 0.811.** 언어 피처 0개, 전사 없음.
+  - Delaware **MCI vs 정상 0.598** → 음향 단독은 MCI에 약함. 조기 신호는 언어 피처 필요(문헌과 일치).
+  - 통합 0.883이지만 Delaware가 정상만 제공해 **코퍼스(채널) 차이를 학습할 여지** → 낙관적 상한으로만 취급. 대외 수치는 코퍼스 내 값 사용.
+  - **휴지 방향 역전 확인**: 한국어는 정상이 더 자주 쉬고, 영어·중국어는 치매가 더 오래 쉼(0.411 vs 0.519, AUC 0.687). "부호는 학습 fold의 데이터로 결정" 원칙의 실증.
+  - 라벨 없어 제외: WLS 1,364(전부 빈칸, 일반 노인 코호트)·VAS·Kempler·Hopkins·Holland·Lanzi.
+  - 트러블슈팅: praat HNR이 파일당 병목(552개 수십분) → **피처 CSV 캐시 + 예외 스킵**으로 중단 내성 확보(`eval_dementiabank.py`). SSH 끊김 대비 `nohup` 실행.
+- 2026-07-29 (**근거기반 해석·검증 파이프라인 추가**): 점수→근거검색→해석→3중검증 구조.
+  - `src/rag/corpus.py`: 근거 16건(우리 실험 7·벤치마크 2·임상 7). ID+원문 보존 → 검증 대조 기준. 자유검색 금지.
+  - `src/rag/retriever.py`: 축별 검색(Solar Embedding, 키워드 폴백). 축 동의어 확장(축명 '침묵 시간' vs 근거 '휴지' 불일치 해결).
+  - `src/agents/analysis/scoring/interpret.py`: 루브릭+근거 주입 해석(Solar). 재채점 금지 프롬프팅.
+  - `src/agents/analysis/scoring/verify_agent.py`: **독립 검증자.** 규칙 4종(숫자근거·점수불변·인용유효·진단표현) + EXAONE 원문대조(entailment).
+    → **검증자에게 자기 지식 사용 금지**, 검색된 원문만 주고 supported/unsupported/overreach 판정. 검증자 환각 차단.
+  - 더미 테스트: 문제 리포트의 위조 수치·점수변경(71→85)·지어낸 인용ID·진단단정 4종 전부 검출. 정상 리포트 통과.
+  - ⚠️ 임상 근거 7건은 **cite 비워둠** — 없는 논문을 지어내지 않기 위함. 팀이 실제 참고문헌 확인 필요.

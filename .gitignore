@@ -44,3 +44,5 @@ data/demo_audio/
 # OS / notebook 출력
 .DS_Store
 notebooks/**/*.html
+# 서빙용 참조분포 — 실데이터에서 파생된 통계값이라 커밋 금지
+configs/scoring_model*.json

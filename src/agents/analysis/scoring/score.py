@@ -87,6 +87,28 @@ class ScoringModel:
     def score_many(self, X: np.ndarray) -> list[dict]:
         return [self.score_one(x) for x in X]
 
+    # ── 저장 / 로드 ─────────────────────────────────────────
+    # 참조분포(HC 평균·표준편차·방향)만 담으면 되므로 JSON으로 충분하다.
+    # 서빙 시 매번 재학습하지 않기 위해 필요. 학습 데이터 없이 배포 가능.
+    def save(self, path: str) -> None:
+        import json
+        from pathlib import Path
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({
+            "feature_names": self.feature_names,
+            "hc_mean": self.hc_mean,
+            "hc_std": self.hc_std,
+            "direction": self.direction,
+        }, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    @classmethod
+    def load(cls, path: str) -> "ScoringModel":
+        import json
+        d = json.loads(open(path, encoding="utf-8").read())
+        return cls(feature_names=d["feature_names"], hc_mean=d["hc_mean"],
+                   hc_std=d["hc_std"], direction=d["direction"])
+
     def total_scores(self, X: np.ndarray) -> np.ndarray:
         return np.array([r["total_score"] for r in self.score_many(X)], dtype=float)
 
