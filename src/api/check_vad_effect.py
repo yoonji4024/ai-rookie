@@ -63,9 +63,12 @@ def main():
     rows = []
     for s in subs:
         rec = {"주체": f"{DX[s['dx']]}(CDR{s['cdr']:g}) {s['sex']}{s['age']}"}
+        # 참조분포는 음향51+언어26=77차원. 음향만 넣으면 인덱스가 어긋난다.
+        from src.agents.analysis.features.extract_linguistic import extract_linguistic
+        lg = extract_linguistic("", [])
         for label, use_vad in (("전체", False), ("VAD", True)):
             ac = extract_acoustic(s["path"], use_vad=use_vad)
-            vec, names = build_feature_vector(ac, {})
+            vec, names = build_feature_vector(ac, lg)
             sc = model.score_one(vec)
             rec[label] = {
                 "total": sc["total_score"],

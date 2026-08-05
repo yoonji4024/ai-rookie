@@ -102,9 +102,17 @@ def score(subs: list[dict]) -> None:
             d = json.loads(segf.read_text(encoding="utf-8"))
             modes.append(("화자분리", dict(segments=[tuple(x) for x in d["segments"]])))
             rec["conf"] = d.get("diarization_confidence")
+        # 참조분포는 음향51+언어26=77차원으로 학습됐다. 음향만 넣으면 인덱스가 어긋난다.
+        # 전사 텍스트가 있으면 실제 언어 피처를, 없으면 빈 텍스트로 자리만 채운다.
+        from src.agents.analysis.features.extract_linguistic import extract_linguistic
+        txt = ""
+        if segf.exists():
+            txt = json.loads(segf.read_text(encoding="utf-8")).get("text", "")
+        lg = extract_linguistic(txt, [])
+
         for name, kw in modes:
             ac = extract_acoustic(s["path"], **kw)
-            vec, names = build_feature_vector(ac, {})
+            vec, names = build_feature_vector(ac, lg)
             sc = model.score_one(vec)
             rec[name] = {"total": sc["total_score"],
                          "pause_ratio": ac.get("pause_ratio", 0.0),
