@@ -90,7 +90,10 @@ def extract_linguistic(transcript: str, word_timings: list[dict] | None = None) 
         "n_utterances": len(utt_texts),
         "n_morphemes": n,
         "utt_len_mean": float(np.mean(utt_lens)) if utt_lens else 0.0,
-        "utt_len_std": float(np.std(utt_lens)) if utt_lens else 0.0,
+        # 발화가 1개뿐이면 '발화 간 편차'는 정의되지 않는다 → 결측(NaN).
+        # 0으로 두면 채점기가 '편차 0'인 실측값으로 받아들여 z가 -4까지 내려간다.
+        "utt_len_std": (float(np.std(utt_lens)) if len(utt_lens) >= 2
+                        else float("nan")),
         "ttr": len(set(morphs_all)) / n if n else 0.0,
         "mattr": _mattr(morphs_all),
         "content_ratio": content / n if n else 0.0,
@@ -143,6 +146,10 @@ def extract_linguistic(transcript: str, word_timings: list[dict] | None = None) 
         feats["turn_gap_mean"] = float(np.mean(gaps)) if gaps else 0.0   # 발화 간 간격(응답 지연 근사)
         feats["turn_gap_std"] = float(np.std(gaps)) if gaps else 0.0
     else:
-        feats.update({"speech_rate": 0.0, "utt_dur_mean": 0.0, "turn_gap_mean": 0.0, "turn_gap_std": 0.0})
+        # 단어 타임스탬프가 없으면 시간 기반 지표를 **계산할 수 없다** → 결측(NaN).
+        # 0으로 두면 "말을 전혀 안 했다"는 실측값처럼 처리되어 z가 -8까지 내려간다.
+        # (STT가 타임스탬프를 주면 자동으로 채워진다)
+        feats.update({k: float("nan") for k in
+                      ("speech_rate", "utt_dur_mean", "turn_gap_mean", "turn_gap_std")})
 
     return feats

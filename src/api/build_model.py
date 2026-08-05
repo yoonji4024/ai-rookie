@@ -25,6 +25,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--out-content", default="configs/scoring_model_content.json")
+    ap.add_argument("--vad-mode", choices=["none", "hybrid", "all"],
+                    help="CHAT 세그먼트 대신 런타임과 같은 방식으로 추출 (정의 일치용)")
     a = ap.parse_args()
 
     from src.agents.analysis.features.build_vector import build_feature_vector
@@ -37,8 +39,15 @@ def main():
 
     X, y, names = [], [], None
     for i, r in enumerate(recs, 1):
-        segs = [(w["startTime"], w["endTime"]) for w in r.word_timings]
-        ac = extract_acoustic(r.wav_path, segments=segs or None)
+        # --vad-mode 를 주면 CHAT 세그먼트를 쓰지 않고 런타임과 같은 방식으로 추출한다.
+        # 목적: 참조분포와 런타임의 피처 정의를 일치시키기 위함.
+        #   기본(segments 사용)은 발화 구간 기준 → 휴지 0.093, 런타임 전체오디오 0.567과
+        #   비교 불가(z=+6.3 포화). 같은 방식으로 만들면 정합이 맞는다.
+        if a.vad_mode:
+            ac = extract_acoustic(r.wav_path, vad_mode=a.vad_mode)
+        else:
+            segs = [(w["startTime"], w["endTime"]) for w in r.word_timings]
+            ac = extract_acoustic(r.wav_path, segments=segs or None)
         try:
             from src.agents.analysis.features.extract_linguistic import extract_linguistic
             lg = extract_linguistic(r.par_text, r.word_timings)

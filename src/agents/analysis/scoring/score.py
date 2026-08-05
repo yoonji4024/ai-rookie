@@ -57,9 +57,14 @@ class ScoringModel:
                       if f in self.hc_mean and f in idx and f not in EXCLUDED_FEATURES]
             if not usable:
                 continue
-            zs, detail = [], {}
+            zs, detail, missing = [], {}, []
             for f in usable:
                 raw = float(x[idx[f]])
+                # 계산 불가(NaN)는 **결측**이다. 0으로 취급하면 z=-8 같은 값이 생겨
+                # 추출 실패가 병리 신호로 둔갑한다 → 축 평균에서 제외한다.
+                if not np.isfinite(raw):
+                    missing.append(f)
+                    continue
                 z = (raw - self.hc_mean[f]) / self.hc_std[f] * self.direction[f]
                 z = float(np.clip(z, -Z_CLIP, Z_CLIP))
                 zs.append(z)
@@ -69,12 +74,19 @@ class ScoringModel:
                     "z": round(z, 3),
                     "direction": "높을수록 정상" if self.direction[f] > 0 else "낮을수록 정상",
                 }
+            if not zs:
+                # 축 전체가 결측이면 점수를 만들지 않는다(0점으로 두면 오해를 부른다).
+                axes_out[axis] = {"score": None, "z": None, "features": {},
+                                  "missing": missing}
+                continue
             az = float(np.mean(zs))
             axes_out[axis] = {
                 "score": _z_to_score(az),
                 "z": round(az, 3),
                 "features": detail,
             }
+            if missing:
+                axes_out[axis]["missing"] = missing
 
         total = _weighted_total(axes_out)
         return {
@@ -130,12 +142,15 @@ def _z_to_score(z: float) -> int:
 
 
 def _weighted_total(axes_out: dict) -> int:
-    if not axes_out:
+    """결측 축(score=None)은 총점 계산에서 제외한다."""
+    valid = {a: v for a, v in axes_out.items() if v.get("score") is not None}
+    if not valid:
         return 0
-    num = sum(axes_out[a]["score"] * AXIS_WEIGHTS.get(a, 1.0) for a in axes_out)
-    den = sum(AXIS_WEIGHTS.get(a, 1.0) for a in axes_out)
+    num = sum(valid[a]["score"] * AXIS_WEIGHTS.get(a, 1.0) for a in valid)
+    den = sum(AXIS_WEIGHTS.get(a, 1.0) for a in valid)
     return int(round(num / den))
 
 
 def _weakest(axes_out: dict, k: int = 2) -> list[str]:
-    return [a for a, _ in sorted(axes_out.items(), key=lambda kv: kv[1]["score"])[:k]]
+    valid = [(a, v) for a, v in axes_out.items() if v.get("score") is not None]
+    return [a for a, _ in sorted(valid, key=lambda kv: kv[1]["score"])[:k]]

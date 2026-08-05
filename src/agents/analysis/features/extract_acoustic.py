@@ -142,7 +142,9 @@ def _voice_features(y: np.ndarray, sr: int) -> dict:
         "cpp",
     ]
     if not _HAS_PRAAT:
-        return {k: 0.0 for k in keys}
+        # ⚠️ 0이 아니라 NaN. 0으로 두면 채점기가 '측정값 0'으로 받아들여
+        #    z=-8 같은 값을 만들어낸다(계산 실패가 병리 신호로 둔갑).
+        return {k: float("nan") for k in keys}
 
     snd = parselmouth.Sound(y.astype(np.float64), sampling_frequency=sr)
     pitch = snd.to_pitch(pitch_floor=60, pitch_ceiling=400)
