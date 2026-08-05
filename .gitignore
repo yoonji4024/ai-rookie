@@ -49,3 +49,6 @@ configs/scoring_model*.json
 
 # 로컬 녹음 (개인 음성) — 커밋 금지
 data/live/
+
+# 임상 화자분리 결과 (전사 텍스트 포함 — 개인정보)
+data/_clinical_segments/

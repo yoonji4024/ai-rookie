@@ -28,10 +28,53 @@ SR = 16000
 CPP_MAX_S = 60          # CPP 계산에 쓸 최대 오디오 길이(초) — 속도/안정성 절충
 
 
+# VAD 파라미터 — Kang의 '발화(utterance)' 단위를 흉내내기 위한 값
+VAD_TOP_DB = 30          # 무음 판정 기준 (_pause_features와 동일)
+VAD_MERGE_GAP = 1.0      # 이보다 짧은 간격은 한 발화 내부 휴지로 본다(초)
+VAD_MIN_DUR = 0.3        # 이보다 짧은 조각은 버린다(잡음)
+
+
+def vad_segments(y: np.ndarray, sr: int) -> list[tuple[float, float]]:
+    """음성 구간을 '발화' 단위로 묶어 반환.
+
+    왜 필요한가 — **참조분포와 입력 조건을 맞추기 위해서다.**
+      학습 참조분포(Kang)는 CHAT 전사의 발화 타임스탬프로 **참가자 발화 구간만**
+      잘라서 계산했다. 조사자가 말하는 동안과 긴 무음은 애초에 빠져 있다.
+      반면 런타임 오디오는 전체를 통째로 넣는다 → 휴지 비율이 3~7배로 튄다
+      (Kang HC 0.08~0.15 vs 임상 0.33 vs 실제 녹음 0.57).
+      이 차이는 인지 상태가 아니라 **입력을 다르게 만들어 넣은 결과**다.
+
+    발화 단위로 묶는 방식
+      - 음성 구간을 찾고,
+      - 간격이 VAD_MERGE_GAP 미만이면 한 발화 안의 휴지로 보아 합치고,
+      - VAD_MIN_DUR 미만 조각은 버린다.
+      → 발화 '내부' 휴지는 보존되고(측정 대상), 발화 '사이' 공백은 제외된다.
+    """
+    intervals = librosa.effects.split(y, top_db=VAD_TOP_DB)
+    if len(intervals) == 0:
+        return []
+    merged: list[list[int]] = [list(intervals[0])]
+    gap_n = int(VAD_MERGE_GAP * sr)
+    for a, b in intervals[1:]:
+        if a - merged[-1][1] < gap_n:
+            merged[-1][1] = b
+        else:
+            merged.append([a, b])
+    min_n = int(VAD_MIN_DUR * sr)
+    return [(a / sr, b / sr) for a, b in merged if b - a >= min_n]
+
+
 def _par_audio(y: np.ndarray, sr: int, segments: list[tuple[float, float]] | None):
-    """PAR 구간 오디오 목록. segments 없으면 전체 1개."""
+    """참가자 발화 구간 오디오 목록.
+
+    segments가 주어지면(학습: CHAT 타임스탬프) 그대로 사용.
+    없으면(런타임) VAD로 발화 구간을 추정한다 — 전체를 통째로 쓰면 참조분포와
+    조건이 어긋나 점수가 뭉개진다.
+    """
     if not segments:
-        return [y]
+        segments = vad_segments(y, sr)
+        if not segments:
+            return [y]
     out = []
     for s, e in segments:
         a, b = int(s * sr), min(int(e * sr), len(y))
@@ -187,10 +230,16 @@ def _load_audio(path: str) -> tuple["np.ndarray", int]:
 def extract_acoustic(
     audio_path: str,
     segments: list[tuple[float, float]] | None = None,
+    use_vad: bool = True,
 ) -> dict:
-    """음향 피처 딕셔너리. segments = PAR 발화 (start_s, end_s) 목록."""
+    """음향 피처 딕셔너리.
+
+    segments : 학습 시 CHAT 전사의 PAR 발화 (start_s, end_s) 목록.
+    use_vad  : segments가 없을 때 VAD로 발화 구간을 추정할지.
+               False면 전체 오디오를 통째로 사용(참조분포와 조건이 어긋남 — A/B 비교용).
+    """
     y, sr = _load_audio(audio_path)
-    chunks = _par_audio(y, sr, segments)
+    chunks = _par_audio(y, sr, segments) if (segments or use_vad) else [y]
     par = np.concatenate(chunks)
 
     feats = {}
