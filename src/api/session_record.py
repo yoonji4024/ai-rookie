@@ -159,11 +159,20 @@ def score(sess: Path, text: str | None = None) -> None:
     for f in d["speechScore"]["factors"]:
         print(f"   {f['label']:9s} {f['score']:3d}  {'█' * int(f['score'] / 5)}")
 
+    cf = d.get("contentScore", {}).get("factors") or []
+    if any(f["score"] for f in cf):
+        print("\n② 내용 점수")
+        # 앞 3축은 참조분포 대비 z, 뒤 2축(문맥 일치도·기억 정확도)은 이벤트 그래프 정답 대비
+        for f in cf:
+            mark = " *" if f["label"] in ("문맥 일치도", "기억 정확도") else "  "
+            print(f"   {f['label']:11s} {f['score']:3d}{mark} {'█' * int(f['score'] / 5)}")
+        print("   * 정답(이벤트 그래프) 대비 직접 산출. MCI 판별력은 미검증")
+
     said = (d.get("questions") or [{}])[0].get("userAnswer", "")
     print(f"\n   STT 결과: {said[:120] or '(전사 실패 또는 무음)'}")
 
     # ── ② 순서 회상 (이벤트 그래프 대조) ──────────────────
-    print("\n② 순서 회상")
+    print("\n③ 순서 회상")
     if not said:
         print("   전사가 비어 채점 불가 — A.X STT 키/응답 확인 필요")
     else:
