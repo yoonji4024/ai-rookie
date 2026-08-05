@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import os
+import tempfile
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -36,6 +37,34 @@ load_env()
 BASE = os.environ.get("AX_STT_BASE", "https://awf-gw.adot.ai")
 # STT_DEBUG=1 → 각 단계의 응답 원문 출력. 응답 스키마가 문서와 다를 때 추적용.
 STT_DEBUG = os.environ.get("STT_DEBUG") == "1"
+
+
+def prepare_for_stt(path: str | Path, max_mb: float = 95.0) -> Path:
+    """STT 업로드용으로 오디오를 16kHz 모노로 변환(필요할 때만).
+
+    왜 필요한가 — 원본이 44.1kHz 스테레오면 10분 녹음이 100MB를 넘어 한도에 걸린다
+    (임상 파일 1020초 = 180MB). 16kHz 모노로 바꾸면 약 1/11로 줄고,
+    STT 권장 포맷과도 일치한다. **타임스탬프는 시간 기준이라 그대로 유효하다.**
+
+    이미 16kHz 모노이고 한도 이하면 원본을 그대로 반환한다.
+    """
+    import soundfile as sf
+    p = Path(path)
+    size_mb = p.stat().st_size / 1e6
+    try:
+        info = sf.info(str(p))
+        ok = info.samplerate == 16000 and info.channels == 1
+    except Exception:
+        ok, info = False, None
+    if ok and size_mb <= max_mb:
+        return p
+
+    import librosa
+    y, sr = librosa.load(str(p), sr=16000, mono=True)
+    out = Path(tempfile.gettempdir()) / f"stt16k_{p.stem}.wav"
+    sf.write(out, y, 16000, subtype="PCM_16")
+    print(f"  [변환] {p.name} {size_mb:.0f}MB → {out.stat().st_size/1e6:.0f}MB (16kHz 모노)")
+    return out
 
 
 def _safe_json(r) -> dict:

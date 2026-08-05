@@ -113,13 +113,16 @@ def _factors(axes: dict, order: list[str]) -> list[ScoreFactor]:
 def _stt(path: str) -> str:
     """A.X STT로 전사. 참가자(주 화자) 발화만 뽑는다.
 
-    text·main_speaker는 property라 괄호 없이 접근한다.
+    ⚠️ text는 property(괄호 없음), main_speaker는 **메서드**(괄호 필요).
+       괄호를 빼면 메서드 객체가 넘어가 by_speaker가 빈 목록을 돌려주고,
+       전사 결과가 항상 비게 된다(실제 발생한 버그).
+
     런타임은 사용자 혼자 말하므로 화자가 1명이지만, 잡음으로 분리가 갈릴 수 있어
-    최장 화자만 취한다.
+    최장 화자만 취한다. 업로드 한도를 넘으면 16kHz 모노로 변환해 보낸다.
     """
-    from src.common.stt import AXSTT
-    tr = AXSTT().transcribe(path)
-    main = tr.main_speaker
+    from src.common.stt import AXSTT, prepare_for_stt
+    tr = AXSTT().transcribe(str(prepare_for_stt(path)))
+    main = tr.main_speaker()
     if main is None:
         return tr.text
     return " ".join(u.text for u in tr.by_speaker(main) if u.text)

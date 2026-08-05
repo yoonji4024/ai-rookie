@@ -46,7 +46,7 @@ def subjects() -> list[dict]:
 
 def diarize(subs: list[dict]) -> None:
     """A.X STT로 전사 → 주 화자(참가자) 구간만 JSON 저장."""
-    from src.common.stt import AXSTT
+    from src.common.stt import AXSTT, prepare_for_stt
 
     SEG_DIR.mkdir(parents=True, exist_ok=True)
     stt = AXSTT()
@@ -57,15 +57,19 @@ def diarize(subs: list[dict]) -> None:
             continue
         print(f"  {s['stem']}: 전사 중…")
         try:
-            tr = stt.transcribe(s["path"])
+            # 임상 원본은 44.1kHz 스테레오라 10분이 180MB(한도 100MB 초과).
+            # 16kHz 모노로 변환 후 전송 — 타임스탬프는 시간 기준이라 그대로 유효.
+            src = prepare_for_stt(s["path"])
+            tr = stt.transcribe(str(src))
         except Exception as e:
             print(f"    실패: {type(e).__name__}: {e}")
             continue
-        main = tr.main_speaker
+        # ⚠️ main_speaker·diarization_confidence는 property가 아니라 메서드다(괄호 필요).
+        main = tr.main_speaker()
         utts = tr.by_speaker(main) if main is not None else tr.utterances
         segs = [(u.start, u.end) for u in utts if u.end > u.start]
         dur = sum(e - b for b, e in segs)
-        conf = tr.diarization_confidence
+        conf = tr.diarization_confidence()
         out.write_text(json.dumps({
             "stem": s["stem"], "main_speaker": main,
             "diarization_confidence": round(float(conf), 3),
