@@ -83,7 +83,15 @@ def main():
     ap.add_argument("--corpora", nargs="+", default=["Pitt", "Delaware", "Lu"])
     ap.add_argument("--pitt-task", default="cookie")
     ap.add_argument("--limit", type=int)
+    ap.add_argument("--vad-mode", default="none", choices=["none", "hybrid", "all"],
+                    help="none=원본(기존 0.765 기준) / hybrid=휴지는원본·음질은발화구간 / all=전면VAD")
     a = ap.parse_args()
+    vad_mode = a.vad_mode
+    # 모드별로 캐시를 분리한다. 섞이면 이전 모드의 피처를 재사용해 비교가 무의미해진다.
+    global CACHE
+    if vad_mode != "none":
+        CACHE = CACHE.with_name(f"dementiabank_en_features_{vad_mode}.csv")
+    print(f"[VAD 모드: {vad_mode}]  캐시: {CACHE.name}")
 
     recs = load_dementiabank(a.corpora, pitt_task=a.pitt_task)
     if a.limit:
@@ -103,7 +111,7 @@ def main():
             vec = cache[r.mp3_path]
         else:
             try:
-                ac = extract_acoustic(r.mp3_path)
+                ac = extract_acoustic(r.mp3_path, vad_mode=vad_mode)
                 vec, names = build_feature_vector(ac, {})
             except Exception as e:            # 깨진 파일 하나가 전체를 막지 않게
                 print(f"  ! 스킵 {r.mp3_path}: {e}")

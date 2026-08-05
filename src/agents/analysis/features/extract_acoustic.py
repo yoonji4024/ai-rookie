@@ -231,16 +231,43 @@ def extract_acoustic(
     audio_path: str,
     segments: list[tuple[float, float]] | None = None,
     use_vad: bool = True,
+    vad_mode: str = "hybrid",
 ) -> dict:
     """음향 피처 딕셔너리.
 
-    segments : 학습 시 CHAT 전사의 PAR 발화 (start_s, end_s) 목록.
+    segments : 학습 시 CHAT 전사의 PAR 발화 (start_s, end_s) 목록. 있으면 그대로 사용.
     use_vad  : segments가 없을 때 VAD로 발화 구간을 추정할지.
-               False면 전체 오디오를 통째로 사용(참조분포와 조건이 어긋남 — A/B 비교용).
+    vad_mode : segments 없이 VAD를 쓸 때 **어디에 적용할지**.
+
+      "hybrid" (기본) — 휴지·템포는 **원본 전체**, 음질·스펙트럼·MFCC는 **발화 구간**.
+      "all"           — 전부 발화 구간 (VAD 전면 적용)
+      "none"          — 전부 원본 전체 (VAD 미적용)
+
+    왜 hybrid인가 — 두 피처군이 서로 반대 방향을 요구한다.
+      · 휴지·템포: **긴 휴지 자체가 진단 신호다.** VAD가 이를 '발화 사이 공백'으로
+        잘라내면 신호가 사라진다. 실측 — Pitt(n=503) 휴지비율 단변량 AUC 0.687 → 0.523,
+        유성구간율 0.656 → 0.506, 전체 AUC 0.765 → 0.699로 하락.
+      · 음질(HNR·CPP·jitter·shimmer·f0): **무음이 섞이면 값이 오염된다.**
+        VAD 적용 시 f0 단변량 AUC 0.563 → 0.640으로 개선. 실제 녹음에서
+        발음 정확도 47점 → 95점(무음 때문에 낮았던 것).
+
+    ⚠️ segments가 주어지면(학습) vad_mode는 무시된다. 학습·런타임의 정의를 맞추려면
+       참조분포도 같은 방식으로 만들어야 한다.
     """
     y, sr = _load_audio(audio_path)
-    chunks = _par_audio(y, sr, segments) if (segments or use_vad) else [y]
-    par = np.concatenate(chunks)
+
+    if segments:
+        chunks = _par_audio(y, sr, segments)
+        voiced = chunks
+    elif not use_vad or vad_mode == "none":
+        chunks = voiced = [y]
+    elif vad_mode == "all":
+        chunks = voiced = _par_audio(y, sr, None)
+    else:                                   # hybrid
+        chunks = [y]                        # 휴지·템포 — 원본 전체
+        voiced = _par_audio(y, sr, None)    # 음질·스펙트럼·MFCC — 발화 구간
+
+    par = np.concatenate(voiced)
 
     feats = {}
     feats.update(_pause_features(chunks, sr))
