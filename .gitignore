@@ -38,6 +38,7 @@ __pycache__/
 node_modules/
 dist/
 dist-ext/
+dist-responsive-review/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts

@@ -134,6 +134,12 @@ export default function ConnectedPetApp(){
     return()=>{alive.current=false;stop();window.removeEventListener('pagehide',unload);window.removeEventListener('beforeunload',leaving);chrome.storage.onChanged.removeListener(changed);halt();resume();};
   },[]);
   useEffect(()=>{
+    if(embedded)return;
+    const resized=()=>{setViewWidth(window.innerWidth);setViewHeight(window.innerHeight);};
+    window.addEventListener('resize',resized);
+    return()=>window.removeEventListener('resize',resized);
+  },[]);
+  useEffect(()=>{
     const observer=new ResizeObserver(()=>{if(root.current){const r=root.current.getBoundingClientRect();post('frame/size',Math.ceil(r.width),Math.ceil(r.height));}});
     if(root.current)observer.observe(root.current);
     const message=(event:MessageEvent)=>{

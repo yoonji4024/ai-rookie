@@ -29,7 +29,7 @@ export default defineManifest({
   manifest_version: 3,
   name: "MEMFLIX 함께 보기",
   key: connection.key,
-  version: "0.3.8",
+  version: "0.3.9",
   description: "보시던 영상 옆에서 같이 보고 말을 거는 반려 캐릭터입니다.",
   minimum_chrome_version: "116",
 

@@ -37,7 +37,7 @@ function harness(){
   const host=()=>elements.find(el=>el.id==='memflix-pet'&&el.isConnected);
   const frame=()=>host()?.shadowRoot.children.find(el=>el.tag==='iframe');
   const notify=(sender={id,url:frame().src})=>runtime.forEach(fn=>fn({v:1,type:'pet/frame-layout',channel:'test-instance',event:{type:'frame/size',width:360,height:480}},sender,()=>{}));
-  return {open,host,frame,notify,sent,origin,timers,windows};
+  return {open,host,frame,notify,sent,origin,timers,windows,win};
 }
 test('no host messages sent to an iframe before verified readiness',()=>{
   const h=harness();assert.equal(h.open().opened,false);
@@ -70,4 +70,14 @@ test('host viewport dimensions stay independent of the collapsed frame',()=>{
   h.notify();h.windows.get('resize')();
   const latest=h.sent.filter(x=>x.message.type==='host/viewport').at(-1).message;
   assert.equal(latest.width,1200);assert.equal(latest.height,900);
+});
+
+test('browser resize sends growing host dimensions, not the last reported card size',()=>{
+  const h=harness();h.open();h.notify();
+  for(const [width,height] of [[1440,900],[1920,1080],[2560,1440],[320,500]]){
+    h.win.innerWidth=width;h.win.innerHeight=height;
+    h.windows.get('resize')();
+    const viewport=h.sent.filter(x=>x.message.type==='host/viewport').at(-1).message;
+    assert.equal(viewport.width,width);assert.equal(viewport.height,height);
+  }
 });
