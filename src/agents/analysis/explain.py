@@ -1,10 +1,10 @@
 """KT 믿:음 — 탐지 근거 제시 (CLAUDE.md §8의 지정 역할).
 
 역할 분담
-  - 분류기(XGBoost): 확률과 기여 피처를 **계산**한다.
+  - 분류기(XGBoost): 확률과 전체 모델의 피처 중요도를 **계산**한다.
   - 믿:음: 그 수치가 **무엇을 뜻하는지 한국어로 설명**한다.
   - 솔라: 보호자용 리포트 문장을 만든다.
-  → 믿:음은 '판단'하지 않는다. 이미 나온 판단의 **근거를 말로 옮긴다**.
+  → 믿:음은 관찰 수치를 설명한다. 전역 중요도를 개인의 기여로 해석하지 않는다.
 
 철칙
   - 주어진 피처·수치만 사용. 없는 근거를 만들지 않는다.
@@ -67,28 +67,46 @@ FEATURE_GLOSS = {
     "lg_krr_demonstrative_rate": "'그거, 저기' 같은 지시어에 기대는 빈도",
 }
 
-SYSTEM = """당신은 발화 분석 결과의 **근거를 설명하는** 역할입니다. 판단은 이미 끝났습니다.
+SYSTEM = """당신은 발화 분석에서 제공된 관찰 수치를 설명하는 역할입니다.
 
-주어진 것: 분석 결과(확률·등급)와, 그 판단에 크게 기여한 관찰 항목들.
-할 일: 각 항목이 무엇을 뜻하고, 이 사람의 값이 일반적인 범위와 어떻게 다른지 설명.
+주어진 것: 모델 출력과 관찰 항목. 모델 출력은 임상 진단이 아닙니다.
+할 일: 각 항목의 뜻과 실제 제공된 값을 설명하세요.
 
 반드시 지킬 것:
-1. 진단명을 쓰지 마세요 (치매·경도인지장애·환자·질환·진단). '이런 신호가 관찰됩니다'까지만.
-2. 주어진 수치만 쓰세요. 없는 값을 만들지 마세요.
+1. 질병명이나 진단을 단정하지 마세요. '진단이 아닙니다'라는 한계 설명은 필요합니다.
+2. value_available=false 또는 null은 미측정입니다. 실제 0과 구분하고 값을 만들지 마세요.
 3. 피처의 영어 이름을 쓰지 말고, 함께 준 우리말 설명을 쓰세요.
-4. 단정하지 말고 관찰로 서술하세요.
+4. reference_available=false이면 비교할 참조가 없다고 쓰세요. reference_mean이 있어도 제공된 평균 하나일 뿐,
+   정상 범위나 임상 기준이 아닙니다. 평균과의 산술 비교만 가능하며 정상/비정상을 판정하지 마세요.
+5. importance_scope=global_model은 전체 모델의 중요도 순위입니다. 이 사람의 결과에 미친 크기·방향이나
+   원인을 계산한 값이 아닙니다. unspecified는 범위가 확인되지 않았습니다. 둘 다 개별 기여로 설명하지 마세요.
+6. 제공되지 않은 단위·범위·원인·품질을 추측하지 마세요. 확률이 미제공이면 채우지 마세요.
 
 반드시 이 JSON만 출력 (한 줄, 문자열 안에 큰따옴표 금지):
-{"evidence": [{"observation": "무엇이 관찰되었나(우리말)", "meaning": "그것이 시사하는 바", "value_note": "이 사람 값과 일반 범위 비교"}],
+{"evidence": [{"observation": "제공된 관찰 또는 미측정 사실(우리말)", "meaning": "항목의 뜻과 해석 한계", "value_note": "제공된 값·참조 평균 또는 비교 불가"}],
  "overall": "2문장 이내 종합. 진단 아님을 명시."}"""
 
 
 def top_contributions(model, feature_names: list[str], x: np.ndarray,
                       reference: dict | None = None, k: int = 5) -> list[dict]:
-    """분류기 기여 상위 피처 + 값/기준 비교."""
+    """전역 중요도 상위 항목과 관찰값. 개별 예측 기여도는 계산하지 않는다.
+
+    공개 함수 이름은 기존 호출자와의 호환을 위해 유지한다.
+    """
+    from src.agents.analysis.explanation_contract import observation_item
+
+    if type(k) is not int or k < 0:
+        raise ValueError('k must be a nonnegative integer')
     imp = getattr(model, "feature_importances_", None)
     if imp is None:
         return []
+    imp = np.asarray(imp, dtype=float)
+    x = np.asarray(x, dtype=object)
+    if (imp.ndim != 1 or x.ndim != 1 or len(imp) != len(x)
+            or len(imp) != len(feature_names)):
+        raise ValueError('feature names, importance and observation vector must align')
+    if not np.isfinite(imp).all() or (imp < 0).any():
+        raise ValueError('global feature importance must be finite and nonnegative')
     order = np.argsort(imp)[::-1][:k]
     out = []
     for i in order:
@@ -96,30 +114,38 @@ def top_contributions(model, feature_names: list[str], x: np.ndarray,
         item = {
             "feature": name,
             "설명": FEATURE_GLOSS.get(name, name),
-            "value": round(float(x[i]), 4),
+            "value": x[i],
             "importance": round(float(imp[i]), 4),
+            "importance_scope": "global_model",
         }
         if reference and name in reference:
-            item["정상군_평균"] = round(float(reference[name]), 4)
+            item["reference_mean"] = reference[name]
+        item = observation_item(item)
+        for key in ('value', 'reference_mean'):
+            if item[key] is not None:
+                item[key] = round(item[key], 4)
         out.append(item)
     return out
 
 
 def explain_detection(prediction: dict, contributions: list[dict]) -> dict:
-    """분류 결과 + 기여 피처 → 한국어 근거 설명 (믿:음)."""
-    payload = {
-        "판단": {"label": prediction.get("label"), "확률": prediction.get("prob")},
-        "기여_항목": contributions,
-    }
+    """모델 출력과 관찰값 → 형식 검사된 한국어 설명 (의미 검증은 별개)."""
+    from src.agents.analysis.explanation_contract import explanation_payload, validated_explanation
+
     try:
-        return chat_json(
+        payload = explanation_payload(prediction, contributions)
+    except (ValueError, TypeError):
+        return {"error": "invalid_explanation_input", "evidence": [], "overall": ""}
+    try:
+        output = chat_json(
             "midm", SYSTEM,
-            f"{json.dumps(payload, ensure_ascii=False, indent=1)}\n\n"
+            f"{json.dumps(payload, ensure_ascii=False, indent=1, allow_nan=False)}\n\n"
             "각 항목의 근거를 설명하는 JSON을 작성하세요.",
             temperature=0.1,
         )
-    except LLMError as e:
-        return {"error": str(e)[:200], "evidence": [], "overall": ""}
+    except LLMError:
+        return {"error": "explanation_generation_failed", "evidence": [], "overall": ""}
+    return validated_explanation(output)
 
 
 if __name__ == "__main__":
@@ -141,9 +167,9 @@ if __name__ == "__main__":
 
     print(f"대상 {ids[i]} (실제 {'MCI' if y[i] else 'HC'})")
     print(f"판단: {pred['label']} (확률 {pred['prob'][pred['label']]:.2f})\n")
-    print("기여 항목:")
+    print("전역 중요도 상위 관찰 항목 (개별 기여 아님):")
     for c in contrib:
-        ref = f" / 정상군 {c.get('정상군_평균')}" if "정상군_평균" in c else ""
+        ref = f" / 참조 평균 {c['reference_mean']}" if c['reference_available'] else " / 참조 없음"
         print(f"  {c['설명']}: {c['value']}{ref}")
 
     print("\n믿:음 근거 설명:")

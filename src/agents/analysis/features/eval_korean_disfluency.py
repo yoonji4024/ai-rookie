@@ -46,8 +46,11 @@ def main():
         e = kr.get(sid)
         if e is None:
             continue
-        f = e["features"]
-        rows.append([float(f.get(k, 0.0)) for k in kr_names])
+        f = e.get("features", {})
+        if (e.get("error") or e.get("partial_error") or
+                any(type(f.get(k)) not in (int, float) or not np.isfinite(f[k]) for k in kr_names)):
+            raise SystemExit("마커 측정 실패/부분 실패/결측이 있어 평가를 중단합니다. 0으로 대체하지 않습니다.")
+        rows.append([float(f[k]) for k in kr_names])
         keep.append(i)
 
     if len(keep) < len(ids):

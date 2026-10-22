@@ -1,0 +1,10 @@
+import {useEffect,useState} from 'react';
+import {welcomeRecords,type WelcomeRecord} from '../lib/portalApi';
+
+export default function WelcomeHistory({ownerId,name}:{ownerId:string;name:string}){
+ const [rows,setRows]=useState<WelcomeRecord[]>([]),[error,setError]=useState('');
+ useEffect(()=>{let alive=true;const load=()=>welcomeRecords(ownerId).then(records=>{if(alive){setRows(records);setError('')}}).catch(()=>{if(alive){setRows([]);setError('인사 기록을 불러오지 못했어요. 가족 연결과 네트워크를 확인해 주세요.')}});void load();const interval=window.setInterval(()=>void load(),20000);return()=>{alive=false;clearInterval(interval)}},[ownerId]);
+ const labels:Record<string,string>={'o-date':'날짜 표현 비교','o-weekday':'요일 표현 비교','o-place':'장소 표현의 구체성'};
+ const value=(id:string,score:number|null)=>score===null?'확인하지 못함':id==='o-place'?(score===1?'구체적인 장소 표현 있음':score>0?'일부 장소 표현 있음':'구체적인 장소 표현을 확인하지 못함'):score===1?'기준과 일치':score>0?'기준과 일부 일치':'기준과 일치하지 않음';
+ return <section className="ee-welcome-history"><h2>시청 전 나눈 인사</h2><p className="ee-muted">날짜·요일과 계신 곳에 관해 나눈 대화예요.</p>{error?<p role="alert">{error}</p>:rows.length===0?<p className="ee-muted">아직 남겨진 인사가 없어요.</p>:rows.map(row=><details key={row.id}><summary>{new Date(row.createdAt*1000).toLocaleString('ko-KR')} · {row.status==='skipped'?'건너뜀':row.status==='partial'?'일부 기록':'대화 기록'}</summary><p className="ee-report-notice">{row.notice}</p><p className="ee-muted">비교 기준: {row.reference.date} · {row.reference.timezone} (기기에서 전달한 시간대)</p><div className="ee-factor-grid">{row.observations.questions.map(q=><div className="ee-factor" key={q.id}><span>{labels[q.id]??q.id}</span><strong>{value(q.id,q.score)}</strong></div>)}</div>{row.items.map(item=><section className="ee-saved-conversation" key={item.id}><p className="ee-saved-prompt">{item.question}</p><p>{item.state==='recorded'?item.userAnswer:item.state==='untranscribed'?'녹음은 남겼지만 글로 확인하지 못했어요.':item.state==='silent'?'목소리를 확인하지 못했어요.':'이 대화는 건너뛰었어요.'}</p>{item.recordingUrl&&<audio controls preload="none" src={item.recordingUrl} aria-label={`${name} 님의 시청 전 인사 녹음`}/>}</section>)}</details>)}</section>;
+}

@@ -1,54 +1,47 @@
+# Credentials and local accounts
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite3-*
+*.sqlite-*
+# Restricted corpora, per-person labels, recordings, generated models
+/data/
+/models/
+/artifacts/
+/outputs/
+/tmp/
+*.wav
+*.mp3
+*.mp4
+*.mov
+*.avi
+*.pkl
+*.joblib
+*.pt
+*.onnx
+configs/scoring_model*.json
 # Python
+.venv/
+venv/
 __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
 .ipynb_checkpoints/
-
-# venv (실폴더가 venv/ 라 둘 다 무시)
-venv/
-.venv/
-
-# env / secrets  ← 절대 커밋 금지
-.env
-*.key
-
-# data: 실데이터·오디오·라벨 전부 커밋 금지
-# ⚠️ macOS는 대소문자 미구분 → '!data/sample/' 예외가 실데이터 폴더 data/Sample/ 까지
-#    풀어버려 633MB push 실패한 적 있음. 예외는 dummy만 두고 이름을 명확히 한다.
-data/*
-!data/dummy/
-!data/.gitkeep
-
-# 미디어·오디오 (혹시 위 규칙을 빠져나가도 이중 차단)
-*.mp4
-*.wav
-*.mp3
-*.avi
-*.mov
-
-# 모델 산출물
-*.pkl
-*.joblib
-*.pt
-*.onnx
-models/
-
-# 자동 생성물 (실행할 때마다 갱신 → git 추적하면 pull 충돌)
-docs/데모_시나리오.md
-docs/샘플_리포트.md
-data/sessions/
-data/demo_audio/
+# Frontend generated content
+node_modules/
+dist/
+dist-ext/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+# Local logs and tooling
 *.log
-
-# OS / notebook 출력
 .DS_Store
-notebooks/**/*.html
-# 서빙용 참조분포 — 실데이터에서 파생된 통계값이라 커밋 금지
-configs/scoring_model*.json
-
-# 로컬 녹음 (개인 음성) — 커밋 금지
-data/live/
-
-# 임상 화자분리 결과 (전사 텍스트 포함 — 개인정보)
-data/_clinical_segments/
+.codex/

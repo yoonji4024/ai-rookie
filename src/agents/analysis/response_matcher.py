@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 
 from src.common.llm import LLMError, chat_json
@@ -60,20 +61,50 @@ def _unique_keywords(nodes) -> dict[str, set[str]]:
     }
 
 
+def _clauses(text: str) -> list[tuple[int, int, str]]:
+    return [(m.start(), m.end(), m.group().strip())
+            for m in re.finditer(r"[^.!?\n]+(?:[.!?]|$)", text) if m.group().strip()]
+
+
+def _unasserted_ranges(text: str) -> list[tuple[int, int]]:
+    """Conservative abstention, not a general Korean negation/repair parser.
+
+    A keyword in a denial, uncertain statement or explicit retraction is not
+    evidence of positive recall. Ambiguous compound clauses may lose recall;
+    preserve them for review rather than assign confident credit.
+    """
+    clauses = _clauses(text)
+    blocked = []
+    for i, (start, end, clause) in enumerate(clauses):
+        if re.search(r"모르|않|아니|아닙|못|기억.{0,10}(?:없|안)|"
+                     r"(?:장면|내용).{0,10}없|(?:^|\s)안\s*\S|취소|정정", clause):
+            blocked.append((start, end))
+        if i and re.search(r"(?:앞의\s*말|방금\s*(?:말|한)).{0,12}(?:취소|정정)", clause):
+            blocked.append(clauses[i - 1][:2])
+    return blocked
+
+
+def _asserted_positions(text: str, evidence: str, blocked) -> list[int]:
+    return [m.start() for m in re.finditer(re.escape(evidence), text)
+            if not any(m.start() < end and m.end() > start for start, end in blocked)]
+
+
 def keyword_match(response_text: str, nodes) -> list[dict]:
     """키워드 규칙 매칭 — 응답에 등장한 위치(순서) 기준. 고유 키워드만 사용."""
     uniq = _unique_keywords(nodes)
+    blocked = _unasserted_ranges(response_text)
     hits = []
     for n in nodes:
         best_pos, best_kw = None, None
-        for kw in uniq.get(n.scene_id, set()):
-            p = response_text.find(kw)
+        for kw in sorted(uniq.get(n.scene_id, set())):
+            positions = _asserted_positions(response_text, kw, blocked)
+            p = positions[0] if positions else -1
             if p >= 0 and (best_pos is None or p < best_pos):
                 best_pos, best_kw = p, kw
         if best_pos is not None:
             hits.append({
                 "scene_id": n.scene_id, "pos": best_pos,
-                "evidence": f"'{best_kw}' 언급", "confidence": 0.95, "by": "keyword",
+                "evidence": best_kw, "confidence": 0.95, "by": "keyword",
             })
     hits.sort(key=lambda h: h["pos"])
     return hits
@@ -93,6 +124,7 @@ def match_response(
     """
     nodes = sorted(event_graph.nodes, key=lambda n: n.order)
     valid_ids = {n.scene_id for n in nodes}
+    blocked = _unasserted_ranges(response_text)
 
     # 1) 키워드 규칙
     kw_hits = keyword_match(response_text, nodes)
@@ -100,9 +132,10 @@ def match_response(
 
     matches = list(kw_hits)
     unmatched: list[str] = []
+    llm_failed = False
 
     # 2) 규칙이 전부 못 잡았을 때만 LLM 보정 (호출 절약 + 근거 우선)
-    need_llm = use_llm and len(matched_ids) < len(nodes)
+    need_llm = use_llm and bool(response_text.strip()) and len(matched_ids) < len(nodes)
     if need_llm:
         try:
             out = chat_json(
@@ -112,25 +145,53 @@ def match_response(
                 + f"\n\n[어르신 회상]\n{response_text}\n\n말한 순서대로 매칭하세요.",
                 temperature=0.0,
             )
-            for i, m in enumerate(out.get("matches", [])):
+            if not isinstance(out, dict) or not isinstance(out.get("matches"), list):
+                raise ValueError("Invalid matching response")
+            for m in out["matches"]:
+                if not isinstance(m, dict):
+                    continue
                 sid = m.get("scene_id")
-                conf = float(m.get("confidence", 0))
-                if sid in valid_ids and sid not in matched_ids and conf >= min_confidence:
+                try:
+                    conf = float(m.get("confidence", 0))
+                except (TypeError, ValueError):
+                    continue
+                if (isinstance(sid, str) and sid in valid_ids and sid not in matched_ids
+                        and math.isfinite(conf) and min_confidence <= conf <= 1):
+                    # 키워드와 LLM 결과 모두 원문 위치로 정렬한다. LLM 결과를
+                    # 무조건 뒤에 붙이면 실제 역순 회상이 정상 순서로 바뀔 수 있다.
+                    evidence = m.get("evidence", "")
+                    if not isinstance(evidence, str) or not evidence.strip():
+                        continue
+                    positions = _asserted_positions(response_text, evidence, blocked)
+                    if not positions:
+                        continue  # 원문에 없는 근거로 위치나 장면을 추정하지 않는다.
+                    pos = positions[0]
                     matches.append({
-                        "scene_id": sid, "pos": 10_000 + i,   # 규칙 매칭 뒤에 배치
-                        "evidence": m.get("evidence", ""),
+                        "scene_id": sid, "pos": pos,
+                        "evidence": evidence,
                         "confidence": conf, "by": "llm",
                     })
                     matched_ids.add(sid)
-            unmatched = [u for u in out.get("unmatched", []) if isinstance(u, str)]
-        except LLMError as e:
-            unmatched.append(f"(LLM 매칭 실패: {e})")
+            raw_unmatched = out.get("unmatched", [])
+            if isinstance(raw_unmatched, list):
+                unmatched = [u for u in raw_unmatched
+                             if isinstance(u, str) and u.strip() and u in response_text]
+        except (LLMError, ValueError, TypeError):
+            llm_failed = True
 
     matches.sort(key=lambda m: m["pos"])
+    # Unresolved text is retained even when the LLM is disabled or fails. It is
+    # not automatically an intrusion: it may be a paraphrase or uncertainty.
+    unresolved = [clause for start, end, clause in _clauses(response_text)
+                  if not any(start <= m['pos'] < end for m in matches)]
+    unmatched = list(dict.fromkeys(unmatched + unresolved))
     return {
         "scene_order": [m["scene_id"] for m in matches],
         "matches": [{k: v for k, v in m.items() if k != "pos"} for m in matches],
         "unmatched": unmatched,
+        "llm_failed": llm_failed,
+        "unasserted_spans": [{"start": start, "end": end, "text": response_text[start:end]}
+                             for start, end in sorted(set(blocked))],
     }
 
 

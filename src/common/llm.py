@@ -1,12 +1,14 @@
 """국내 LLM 통합 클라이언트 (대회 제약: 국내 기업 모델만).
 
 지원
-  ax     : SKT A.X K1        — 타이밍 게이트 draft, 실시간 질문 생성
+  ax     : SKT A.X K2        — 타이밍 게이트 draft, 실시간 질문 생성
   exaone : LG EXAONE         — 타이밍 게이트 judge, 교차검증   (Friendli)
   solar  : Upstage Solar Pro2 — 요약·매칭·리포트
-  midm   : KT 믿:음 2.0       — 탐지 근거 제시                (Friendli)
+  midm   : KT 믿:음 2.5 Pro   — 탐지 근거 제시                (KT 직접 API)
 
-⚠️ Friendli(exaone·midm)는 `model` 필드에 모델명이 아니라 **엔드포인트 ID**를 넣는다.
+⚠️ Friendli(exaone)는 `model` 필드에 모델명이 아니라 **엔드포인트 ID**를 넣는다.
+⚠️ KT 결선 API는 2026-09-21 정정 안내의 주소와 모델 ID를 사용한다.
+⚠️ A.X는 2026-10-11 전달된 운영 공지에 따라 K2를 사용한다. 과거 K1 평가와 구분한다.
 ⚠️ 키는 .env에서만 읽는다(하드코딩 금지).
 
 mock 모드
@@ -57,7 +59,7 @@ class ModelSpec:
     key_env: str
     base_url: str
     model: str
-    model_env: str | None = None    # Friendli: 엔드포인트 ID를 env에서
+    model_env: str | None = None    # 모델 ID 또는 Friendli 엔드포인트 ID 재정의
 
     def resolved_model(self) -> str:
         if self.model_env:
@@ -68,14 +70,14 @@ class ModelSpec:
 
 
 MODELS: dict[str, ModelSpec] = {
-    "ax": ModelSpec("AX_API_KEY", "https://awf-gw.adot.ai/v1", "A.X-K1"),
+    "ax": ModelSpec("AX_API_KEY", "https://awf-gw.adot.ai/v1", "A.X-K2"),
     "solar": ModelSpec("SOLAR_API_KEY", "https://api.upstage.ai/v1", "solar-pro2"),
     "exaone": ModelSpec(
         "EXAONE_API_KEY", "https://api.friendli.ai/dedicated/v1",
         "", model_env="EXAONE_ENDPOINT_ID"),
     "midm": ModelSpec(
-        "MIDM_API_KEY", "https://api.friendli.ai/dedicated/v1",
-        "", model_env="MIDM_ENDPOINT_ID"),
+        "MIDM_API_KEY", "https://midm.kt.com/v1",
+        "midm-pro-fp8-kaic", model_env="MIDM_MODEL_ID"),
 }
 
 
@@ -103,7 +105,36 @@ def _throttle(model: str) -> None:
     _last_call[model] = time.monotonic()
 
 
-MAX_CHARS = 120_000              # A.X 컨텍스트 한도 128,000자 — 여유 두고 자름
+MAX_CHARS = 120_000              # 기존 앱 입력 상한 유지; K2 제공사 컨텍스트 한도와는 별개
+
+
+def _completion_text(body, model: str) -> str:
+    """Validate one final message without leaking provider bodies or reasoning.
+
+    We request one text answer. Multiple choices and nonfinal/tool/refusal
+    messages cannot be silently treated as that answer. Legacy responses with
+    no finish_reason remain compatible when the message is otherwise valid.
+    """
+    if not isinstance(body, dict):
+        raise LLMError(f"{model} 응답 본문 형식 오류")
+    choices = body.get('choices')
+    if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], dict):
+        raise LLMError(f"{model} 단일 응답 후보 형식 오류")
+    choice = choices[0]
+    finish = choice.get('finish_reason')
+    if finish == 'length':
+        raise LLMError(f"{model} 최종 응답이 토큰 한도로 잘림")
+    if finish is not None and finish != 'stop':
+        raise LLMError(f"{model} 완료되지 않았거나 거절된 응답")
+    message = choice.get('message')
+    if not isinstance(message, dict):
+        raise LLMError(f"{model} 응답 메시지 형식 오류")
+    if message.get('refusal'):
+        raise LLMError(f"{model} 생성 거절 응답")
+    content = message.get('content')
+    if not isinstance(content, str) or not content.strip():
+        raise LLMError(f"{model} 최종 응답이 비어 있음 — reasoning 설정·토큰 한도 확인")
+    return content
 
 
 def chat(
@@ -111,12 +142,14 @@ def chat(
     system: str,
     user: str,
     temperature: float = 0.0,
-    # 90초: Friendli 전용 엔드포인트(EXAONE·믿:음)는 콜드 스타트가 있어 30초로는
+    # 90초: Friendli 전용 엔드포인트(EXAONE)는 콜드 스타트가 있어 30초로는
     # 첫 호출이 자주 타임아웃된다. 검증 단계가 이것 때문에 실패하면 리포트 전체가
     # 미검증으로 떨어지므로 넉넉히 잡는다.
     timeout: int = 90,
     max_tokens: int | None = None,
     retries: int = 3,
+    thinking: bool | None = None,
+    response_format: dict | None = None,
 ) -> str:
     """LLM 호출 → 응답 텍스트. model: 'ax'|'exaone'|'solar'|'midm'."""
     if is_mock():
@@ -142,6 +175,16 @@ def chat(
     }
     if max_tokens:
         payload["max_tokens"] = max_tokens
+    if thinking is not None and model in {"ax", "exaone"}:
+        # Friendli 전용 엔드포인트의 reasoning 모델은 이 값을 생략하면
+        # 최종 답변 없이 reasoning_content만 수천 토큰 생성할 수 있다.
+        # 호출 목적에 따라 명시적으로 켜고 끄되, 내부 추론은 응답에 포함하지 않는다.
+        payload["chat_template_kwargs"] = {"enable_thinking": thinking}
+        if model == "exaone":
+            payload["parse_reasoning"] = True
+            payload["include_reasoning"] = False
+    if response_format is not None:
+        payload["response_format"] = response_format
 
     last: Exception | None = None
     for attempt in range(retries + 1):
@@ -149,7 +192,7 @@ def chat(
         try:
             r = requests.post(
                 f"{spec.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json; charset=UTF-8"},
                 json=payload, timeout=timeout,
             )
             if r.status_code == 429:                    # Rate limit — 지수 백오프
@@ -159,7 +202,7 @@ def chat(
                     continue
                 raise last
             r.raise_for_status()
-            return r.json()["choices"][0]["message"]["content"]
+            return _completion_text(r.json(), model)
         except requests.RequestException as e:
             last = e
             if attempt < retries and _retryable(e):
@@ -178,9 +221,12 @@ def _retryable(e: Exception) -> bool:
 
 
 def chat_json(model: str, system: str, user: str, **kw) -> dict:
-    """JSON 응답 전용 — 코드펜스·잡텍스트 방어 후 파싱 (CLAUDE.md §12)."""
+    """객체 JSON 응답 전용. 배열 응답 경로는 chat/parse_json을 따로 사용한다."""
     raw = chat(model, system, user, **kw)
-    return parse_json(raw)
+    value = parse_json(raw)
+    if not isinstance(value, dict):
+        raise LLMError("JSON 객체 응답이 필요함")
+    return value
 
 
 def _repair_json(s: str) -> str:
@@ -193,29 +239,18 @@ def _repair_json(s: str) -> str:
     return s
 
 
-def parse_json(text: str) -> dict:
-    """LLM 출력 → dict. 실패는 항상 LLMError로 올려 호출부가 처리하게 한다.
+def parse_json(text: str) -> dict | list:
+    """설명 속 괄호와 JSON 경계를 구분하며 문자열 값은 수정하지 않는다.
 
-    ⚠️ json.JSONDecodeError를 그대로 올리면 호출부의 `except LLMError`를 빠져나가
-       파이프라인 전체가 죽는다(실제로 A.X K1의 깨진 JSON 때문에 세션이 중단됨).
+    잘림·중복 키·비유한수·여러 JSON·문법 보정이 필요한 응답은 LLMError다.
+    형식 복구는 스키마/내용의 정확성이나 개인정보 제거 완료를 보증하지 않는다.
     """
-    raw = text
-    text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()
-
-    for candidate in (text, _repair_json(text)):
-        try:
-            return json.loads(candidate)
-        except json.JSONDecodeError:
-            pass
-        m = re.search(r"[\{\[].*[\}\]]", candidate, re.S)
-        if m:
-            for c in (m.group(0), _repair_json(m.group(0))):
-                try:
-                    return json.loads(c)
-                except json.JSONDecodeError:
-                    pass
-
-    raise LLMError(f"JSON 파싱 실패: {raw[:300]}")
+    from src.common.json_contract import bounded_container
+    try:
+        return bounded_container(text)
+    except (ValueError, TypeError, RecursionError) as exc:
+        # The caller can report failure without copying source text into logs.
+        raise LLMError("JSON 파싱 실패: 단일 유효 구조가 필요함") from exc
 
 
 def health_check() -> dict[str, str]:

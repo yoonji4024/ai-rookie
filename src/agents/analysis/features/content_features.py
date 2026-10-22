@@ -1,13 +1,15 @@
-"""내용(semantic) 피처 — 전사 텍스트 기반, 규칙.
+"""내용 표현 카운터 — 전사 텍스트의 부분문자열 규칙.
 
 내용 5축 중 **전사만으로 잴 수 있는** 축의 재료를 뽑는다.
   - 단어 수준        : 어휘 다양성·내용어 밀도
-  - 시간·장소 지남력 : 시간/장소 표현의 밀도·구체성
-  - 논리 연결        : 접속 표현, 지시어 해소 가능성
+  - 시간·장소 축 재료: 시간/장소 문자열의 밀도·구체/지시 표현 비율
+  - 논리 연결 재료  : 접속 표현 문자열의 빈도
 
-⚠️ 정규화는 **형태소(토큰) 기준**이다.
-   발화당으로 세면 길게 말하는 사람이 유리해진다(Kang: HC 27.5형태소 vs MCI 15.8).
-   실제로 발화당 정규화 때문에 간투사가 가짜 최강 신호로 보인 적이 있다.
+분모는 **[가-힣]+ 한글 연속구간 수**다. Kiwi 형태소 수와 다르며 숫자/영문은
+분모에 포함하지 않는다. 한글 구간이 없으면 1을 사용한다. 분자는 부분문자열
+일치 횟수여서 '집중'의 '집'처럼 의미상 장소가 아닌 용례도 포함할 수 있다.
+표현 빈도만으로 실제 날짜·위치의 정오, 지남력이나 지시어 해소를 검증하지 않는다.
+기존 참조는 이 수치 정의로 적합됐으므로 토큰화/매칭 변경 시 별도 재검증이 필요하다.
 """
 from __future__ import annotations
 
@@ -39,11 +41,12 @@ TOKEN = re.compile(r"[가-힣]+")
 
 
 def _tok(texts: list[str]) -> int:
+    """한글 연속구간 수(형태소 수 아님); 빈 분모 방지를 위해 최소 1."""
     return sum(len(TOKEN.findall(t)) for t in texts) or 1
 
 
 def extract_content(utterances: list[str]) -> dict:
-    """전사 → 내용 피처 (형태소당 정규화)."""
+    """전사 → 부분문자열 계수/한글 연속구간 수와 표현 비율."""
     joined = " ".join(utterances)
     n = _tok(utterances)
 
@@ -59,7 +62,7 @@ def extract_content(utterances: list[str]) -> dict:
         "cnt_time_relative_rate": tr / n,       # 상대적 시간(어제·요즘)
         "cnt_place_specific_rate": ps / n,      # 구체적 장소(병원·서울)
         "cnt_place_deictic_rate": pd / n,       # 지시적 장소(여기·거기)
-        # 구체성 비율 — 구체 표현이 지시 표현보다 많은가 (지남력의 핵심)
+        # 문자열 목록 기준의 구체/지시 비율이며 실제 지남력 정오가 아니다.
         "cnt_time_specificity": ts / (ts + tr) if (ts + tr) else 0.0,
         "cnt_place_specificity": ps / (ps + pd) if (ps + pd) else 0.0,
         # 논리 연결
@@ -90,7 +93,7 @@ if __name__ == "__main__":
         y.append(1 if r.label == "MCI" else 0)
     K, y = np.array(rows), np.array(y)
 
-    print("내용 피처 판별력 (형태소당 정규화, Kang HC 37 / MCI 40)\n")
+    print("내용 피처 판별력 (한글 연속구간당 정규화, Kang HC 37 / MCI 40)\n")
     print(f"  {'피처':28s} {'HC':>8s} {'MCI':>8s} {'AUC':>7s}")
     for j, k in enumerate(FEATURE_NAMES):
         c = K[:, j]

@@ -83,15 +83,12 @@ def _build_user_prompt(score_result: dict) -> str:
 
 
 def _parse_json(text: str) -> dict:
-    """LLM 출력에서 JSON 추출 (코드펜스·잡텍스트 방어)."""
-    text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        m = re.search(r"\{.*\}", text, re.S)
-        if m:
-            return json.loads(m.group(0))
-        raise
+    """문법·값을 고치지 않고 하나의 유한한 JSON 객체만 해석."""
+    from src.common.json_contract import bounded_container
+    value = bounded_container(text)
+    if not isinstance(value, dict):
+        raise ValueError("Object root required")
+    return value
 
 
 def call_solar(system: str, user: str, temperature: float = 0.2) -> str:
@@ -112,7 +109,8 @@ def call_solar(system: str, user: str, temperature: float = 0.2) -> str:
         timeout=TIMEOUT,
     )
     resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
+    from src.common.llm import _completion_text
+    return _completion_text(resp.json(), "solar")
 
 
 def generate_speech_report_verified(
@@ -124,6 +122,11 @@ def generate_speech_report_verified(
     반환 리포트에 '_attempts', '_verified' 메타를 붙인다.
     """
     from src.agents.analysis.scoring.validate_solar import check_report  # 순환참조 회피
+    from src.agents.analysis.scoring.legacy_speech_input import input_issues
+    unavailable = input_issues(score_result, require_prompt=True)
+    if unavailable:
+        return {"error": "별도 리포트 전체 검증에 필요한 입력이 부족합니다.",
+                "_verified": False, "_attempts": 0, "_last_issues": unavailable}
 
     base_user = _build_user_prompt(score_result)
     user = base_user
@@ -161,6 +164,8 @@ def generate_speech_report(
     raw = call_solar(SYSTEM_PROMPT, user, temperature=temperature)
     try:
         report = _parse_json(raw)
+        if report.get("error") or report.get("_error"):
+            raise ValueError("Incomplete generator response")
     except Exception as e:
         return {"error": f"JSON 파싱 실패: {e}", "raw": raw}
     report["_input_digest"] = {

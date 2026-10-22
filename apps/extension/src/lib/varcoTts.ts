@@ -1,0 +1,87 @@
+// NCSOFT VARCO Voice TTS 연동 공용 유틸.
+// VARCO API는 브라우저 직접 호출을 막고 있어(CORS 응답 헤더 없음) 프론트엔드에서
+// 바로 fetch할 수 없다. 그래서 같은 출처의 "/api/varco-tts"로 요청을 보내고,
+// 개발 서버(vite.config.ts의 proxy)가 실제 엔드포인트로 중계하면서 API 키를
+// 서버 쪽에서 붙여준다 — 키가 클라이언트 번들에 들어가지 않는다.
+const VARCO_TTS_PROXY_PATH = "/api/varco-tts";
+
+/** "미리엘(행복)" — 여성/노년/중음/거침/구수한 톤. 치매위험군 어르신(환자) 답변 목소리로 공용 사용 */
+export const GRANDMA_ANSWER_VOICE_ID = "ac19386b-adc3-58e2-afe4-f96713ef0f5b";
+
+/** "에스텔(행복)" — 여성/청년/고음/얇음/귀여운 톤. 손녀가 옆에서 재잘대는 듯한 느낌.
+ *  영상 챗봇·로그인 챗봇·콘텐츠 선택 챗봇이 모두 같은 질문 목소리를 쓴다 */
+export const QUESTION_VOICE_ID = "3278b908-86ee-5c30-bb55-24b5b1bbc67b";
+export const QUESTION_VOICE_PROPERTIES: VarcoTtsProperties = { speed: 1 };
+
+export interface VarcoTtsProperties {
+  /** 0.5~1.5, 기본 0.95 */
+  speed?: number;
+  /** 0.5~1.5, 기본 1 */
+  pitch?: number;
+}
+
+/** 텍스트를 VARCO Voice로 합성해 base64 WAV 오디오만 받아온다 (재생은 호출자가 담당) */
+export async function synthesizeVarcoTts(
+  text: string,
+  voiceId: string,
+  properties?: VarcoTtsProperties,
+  signal?: AbortSignal,
+): Promise<string> {
+  const res = await fetch(VARCO_TTS_PROXY_PATH, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal,
+    body: JSON.stringify({
+      text,
+      language: "korean",
+      voice: voiceId,
+      properties: { speed: 0.95, pitch: 1, ...properties },
+      n_fm_steps: 8,
+      seed: -1,
+      return_metadata: false,
+    }),
+  });
+  if (!res.ok) throw new Error(`VARCO TTS 요청 실패: ${res.status}`);
+  const data = await res.json();
+  return data.audio as string;
+}
+
+/**
+ * 텍스트를 VARCO Voice로 합성해 바로 재생한다.
+ * @returns 재생을 즉시 중단하는 함수 (컴포넌트 언마운트/토글 시 호출)
+ */
+export function playVarcoTts(
+  text: string,
+  voiceId: string,
+  onEnd: () => void,
+  properties?: VarcoTtsProperties,
+): () => void {
+  let cancelled = false;
+  let audio: HTMLAudioElement | null = null;
+  const controller = new AbortController();
+
+  (async () => {
+    try {
+      const audioB64 = await synthesizeVarcoTts(text, voiceId, properties, controller.signal);
+      if (cancelled) return;
+
+      audio = new Audio(`data:audio/wav;base64,${audioB64}`);
+      audio.onended = onEnd;
+      await audio.play();
+    } catch (err) {
+      if (!cancelled) {
+        console.error("VARCO TTS 합성/재생 실패:", err);
+        onEnd();
+      }
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+    controller.abort();
+    if (audio) {
+      audio.onended = null;
+      audio.pause();
+    }
+  };
+}

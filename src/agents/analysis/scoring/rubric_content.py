@@ -45,9 +45,17 @@ AXES_TRANSCRIPT: dict[str, list[str]] = {
 # 이벤트 그래프가 정답이므로 규준 불필요. 0~100 환산식만 정의한다.
 RECALL_AXES = ["문맥 일치도", "기억 정확도"]
 
+# 문헌에서 반복적으로 중요성이 확인되는 회상·지남력을 중심으로 한 잠정 가중치.
+# MEMFLIX 임상 표본으로 민감도/특이도를 검증한 확정 진단 배점은 아니며, 보호자용
+# 관찰 총점을 만들기 위한 설계값이다. 문맥 일치도와 기억 정확도는 같은 네 문답에서
+# 파생되므로 동일하게 크게 잡지 않고, 발화 길이·교육·STT 영향이 큰 단어 수준은
+# 보조 지표로만 반영한다.
 AXIS_WEIGHTS: dict[str, float] = {
-    **{k: 1.0 for k in AXES_TRANSCRIPT},
-    **{k: 1.0 for k in RECALL_AXES},
+    "기억 정확도": 0.40,
+    "시간·장소 지남력": 0.25,
+    "문맥 일치도": 0.15,
+    "논리 연결": 0.15,
+    "단어 수준": 0.05,
 }
 
 # 발화 축과 동일한 환산·등급 규칙을 쓴다 (일관성)
@@ -63,15 +71,20 @@ __all__ = [
 
 
 # ── 회상 기반 축 환산식 ──────────────────────────────────────
-def score_memory_accuracy(recall: dict) -> tuple[int, dict]:
+def score_memory_accuracy(recall: dict) -> tuple[int | None, dict]:
     """기억 정확도 — 얼마나 많이, 얼마나 순서대로 기억했는가.
 
     coverage(회상한 장면 비율)와 Kendall's tau(순서 일치도)를 반씩 반영.
     tau는 -1~1이므로 0~1로 옮긴다.
     """
+    if recall.get("measurement_status") in {"partial", "unavailable"}:
+        return None, {"설명": "자유 회상 매칭은 관찰값이며 완전한 의미 판정이 없어 점수 환산을 보류함"}
     cov = float(recall.get("coverage", 0.0))
     tau = float(recall.get("kendall_tau", 0.0))
-    tau01 = (tau + 1) / 2
+    # 장면을 0~1개만 회상하면 순서 일치도는 정의할 수 없다. 이때 tau=0을
+    # 중립(50점)으로 환산하면 아무것도 답하지 않아도 기억 점수가 25점이 된다.
+    n_correct = int(recall.get("n_correct", 0))
+    tau01 = (tau + 1) / 2 if n_correct >= 2 else 0.0
     score = int(round(100 * (0.5 * cov + 0.5 * tau01)))
     return score, {
         "coverage": round(cov, 3),
@@ -80,14 +93,19 @@ def score_memory_accuracy(recall: dict) -> tuple[int, dict]:
     }
 
 
-def score_context_match(recall: dict, n_scenes: int) -> tuple[int, dict]:
+def score_context_match(recall: dict, n_scenes: int) -> tuple[int | None, dict]:
     """문맥 일치도 — 실제 콘텐츠에 있던 내용만 말했는가.
 
     intrusion(없던 내용을 말함)은 문맥 이탈이므로 감점.
     omission(빠뜨림)은 '기억 정확도' 쪽에서 이미 반영하므로 여기선 가볍게만 본다.
     """
     e = recall.get("errors", {})
+    if recall.get("measurement_status") in {"partial", "unavailable"} or e.get("intrusion") is None:
+        return None, {"intrusion": None, "설명": "침입 오류 여부를 확정하지 못해 문맥 점수 환산을 보류함"}
     intrusion = int(e.get("intrusion", 0))
+    n_correct = int(recall.get("n_correct", 0))
+    if n_correct == 0:
+        return 0, {"intrusion": intrusion, "설명": "콘텐츠와 일치하는 장면을 확인하지 못함"}
     n = max(1, n_scenes)
     penalty = min(1.0, intrusion / n)          # 장면 수 대비 침입 비율
     score = int(round(100 * (1 - penalty)))

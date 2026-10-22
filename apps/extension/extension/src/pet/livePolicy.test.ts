@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {duePrompts,transcriptOutcome,canRecord,type Pulse} from './livePolicy.ts';
+const pulse=(seconds:number,extra:Partial<Pulse>={}):Pulse=>({seconds,prevSeconds:seconds-.25,paused:false,ended:false,adShowing:false,fullscreen:false,...extra});
+const prompts=[{id:'a',timestamp:15,delivery:'at_time'},{id:'b',timestamp:null,delivery:'after_segment'},{id:'c',timestamp:0,delivery:'after_video'}];
+test('welcome can record before any video; watch requires a connection',()=>{assert.equal(canRecord(null,'welcome'),true);assert.equal(canRecord(null,'watch'),false);});
+test('neither welcome nor watch records over playback or ads',()=>{for(const kind of ['welcome','watch'] as const){assert.equal(canRecord(pulse(1),kind),false);assert.equal(canRecord(pulse(1,{adShowing:true,paused:true}),kind),false);assert.equal(canRecord(pulse(1,{paused:true}),kind),true);}});
+test('natural crossing; no repeated prompt at same timestamp',()=>{assert.deepEqual(duePrompts(prompts,pulse(14.9),pulse(15.1),30),['a']);assert.deepEqual(duePrompts(prompts,pulse(15.1),pulse(15.3),30),[]);});
+test('initial attach and seeks do not imply watching a scene',()=>{assert.deepEqual(duePrompts(prompts,null,pulse(16),30),[]);assert.deepEqual(duePrompts(prompts,pulse(0),pulse(20),30),[]);assert.deepEqual(duePrompts(prompts,pulse(20),pulse(10),30),[]);});
+test('ads, ad exit and hidden fullscreen prevent prompt',()=>{assert.deepEqual(duePrompts(prompts,pulse(14.9),pulse(15.1,{adShowing:true}),30),[]);assert.deepEqual(duePrompts(prompts,pulse(14.9,{adShowing:true}),pulse(15.1),30),[]);assert.deepEqual(duePrompts(prompts,pulse(14.9),pulse(15.1,{fullscreen:true}),30),[]);});
+test('segment end and true video end remain separate',()=>{assert.deepEqual(duePrompts(prompts,pulse(29.9),pulse(30.1),30),['b']);assert.deepEqual(duePrompts(prompts,pulse(45),pulse(45.1,{ended:true}),30),['c']);assert.deepEqual(duePrompts(prompts,pulse(45.1,{ended:true}),pulse(45.1,{ended:true}),30),[]);});
+test('missing or invalid transcript cannot become an authored answer',()=>{for(const v of [null,undefined,'','  ',{},9])assert.equal(transcriptOutcome(v),'untranscribed');assert.equal(transcriptOutcome('실제 받아쓴 말'),'recorded');});

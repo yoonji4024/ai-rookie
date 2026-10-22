@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MEMFLIX · 두리</title>
+    <style>
+      /* 이 문서는 영상 페이지 위에 띄운 iframe 이다. 바탕이 비쳐야 강아지만 떠 보인다.
+         iframe 요소와 이 문서의 color-scheme 이 다르면 크롬이 불투명한 바탕을 깐다.
+         normal 은 "페이지를 따른다"라서 다크 테마 페이지(MemTube, 유튜브 다크 모드)에서 어긋난다
+         — 실제로 흰 사각형이 떴다. 양쪽을 light 로 못박는다(petOverlay.ts 의 iframe 스타일과 짝). */
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        color-scheme: light;
+        overflow: hidden;
+      }
+      * { box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/pet/main.tsx"></script>
+  </body>
+</html>

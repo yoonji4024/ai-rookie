@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "baseUrl": ".",
+    // src/shared 는 웹앱과 확장이 함께 쓰는 코드다. 여기 types 에 "chrome" 을 넣지 않는 것이
+    // 곧 "shared 는 chrome.* 을 직접 만지지 않는다"는 규칙의 집행기다 — 위반하면 빌드가 깨진다.
+    // 확장 코드의 타입 검사는 chrome 타입을 켠 tsconfig.ext.json 이 따로 맡는다.
+    "paths": { "@shared/*": ["src/shared/*"] },
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

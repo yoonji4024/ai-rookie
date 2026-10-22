@@ -1,7 +1,7 @@
 """전사 텍스트 개인정보(PII) 마스킹.
 
-⚠️ 파일명만 익명화해선 부족하다. 전화 인지검사 음성/전사에는 내용 자체에 PII가 박혀 있다:
-   실명("오현녀님"), 기관·교수명("보라매병원 이준영 교수님 연구실"), 생년월일 등.
+⚠️ 파일명만 익명화해선 부족하다. 전사 본문에도 이름·기관명·생년월일 등이 포함될 수 있다.
+
    → STT 전사 JSON의 text 필드에서 이들을 마스킹한다.
 
 한계
@@ -19,8 +19,8 @@ import json
 import re
 from pathlib import Path
 
-# 호칭 앞의 한국 이름 (2~4자) — "오현녀님", "오현녀님댁", "전광남씨"
-# ⚠️ 한글은 \b 경계가 제대로 안 먹어("오현녀님댁" 누락) → lookahead에서 호칭만 확인
+# 호칭 앞의 한국 이름 (2~4자) — "홍길동님", "홍길동님댁", "김가상씨"
+# ⚠️ 한글은 \b 경계가 제대로 안 먹어("홍길동님댁" 누락) → lookahead에서 호칭만 확인
 NAME_HONORIFIC = re.compile(r"[가-힣]{2,4}(?=(?:님|씨|할머니|할아버지|어르신))")
 # 기관 + 교수/센터/병원/연구실
 ORG = re.compile(
@@ -64,8 +64,8 @@ def mask_file(path: Path) -> int:
 
 # ── LLM 보조 마스킹 (믿:음) — 기본 비활성 ────────────────────
 # ⚠️ 이 경로는 전사 텍스트를 외부 API로 전송한다.
-#    제공자 조건은 "시연 시 실명·기관 제거"이며, 그건 위의 로컬 규칙으로 충족된다.
-#    개인정보를 API로 내보내는 위험을 새로 만들 필요가 없으므로 **기본은 규칙만** 쓴다.
+#    로컬 규칙에도 이름·주소 등의 누락이 남을 수 있으므로 제거 완료로 간주하지 않는다.
+#    외부 전송 가능한 자료에만 사용하며 **기본은 규칙만** 쓴다.
 #    (규칙이 놓친 걸 꼭 LLM으로 잡아야 할 때만, 규칙 1차 마스킹 후 옵트인으로 사용)
 LLM_SYSTEM = """다음 텍스트에서 개인정보를 찾아 정해진 태그로 바꾸세요.
 
@@ -85,14 +85,15 @@ LLM_SYSTEM = """다음 텍스트에서 개인정보를 찾아 정해진 태그�
 def mask_text_llm(text: str) -> str:
     """규칙으로 1차 마스킹된 텍스트를 믿:음이 재검. 실패 시 입력 그대로 반환.
 
-    ⚠️ **규칙 마스킹을 먼저 적용한 뒤** 호출해야 실명이 이미 빠진 상태로 API에 나간다.
-       (원문을 그대로 LLM에 보내면 실명이 외부로 전송됨)
+    ⚠️ 먼저 규칙을 적용해도 개인정보 잔류가 가능하다. 허용된 자료에만 사용한다.
+       출력 무결성 검사와 실패 시 원문 반환 모두 개인정보 제거 완료를 보증하지 않는다.
     """
     from src.common.llm import LLMError, chat_json
     try:
         out = chat_json("midm", LLM_SYSTEM, text, temperature=0.0)
         m = out.get("masked")
-        return m if isinstance(m, str) and m.strip() else text
+        from src.preprocessing.masking_contract import is_masking_only
+        return m if is_masking_only(text, m) else text
     except (LLMError, Exception):
         return text
 
@@ -104,7 +105,7 @@ def mask_file_hybrid(path: Path) -> tuple[int, int]:
     for u in d.get("utterances", []):
         t1, k = mask_text(u.get("text", ""))     # 1차: 규칙 (로컬)
         rule_n += k
-        t2 = mask_text_llm(t1)                    # 2차: 믿:음 (이미 실명 빠진 상태)
+        t2 = mask_text_llm(t1)                    # 2차: 믿:음 (규칙 누락 가능)
         if t2 != t1:
             llm_changed += 1
         u["text"] = t2

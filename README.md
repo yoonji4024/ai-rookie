@@ -1,30 +1,93 @@
-# AI 동반 미디어 시청 기반 인지 스크리닝 시스템
+# MEMFLIX · 두리와 함께 보는 일상
 
-2026 인공지능 루키 대회 국내 AI 트랙 · 성균관대학교 소프트웨어학과
+영상 시청 중 대화, 음성 기록, 다음 만남을 위한 대화 기억, 연결된 가족의 기록 조회를 제공하는 대회 시연 프로젝트입니다. 두리는 파란 해마 캐릭터이며, 서비스 이름은 MEMFLIX입니다. AI가 진단명을 내리는 서비스가 아닙니다.
 
-어르신이 평소처럼 드라마·뉴스를 시청하는 상황을 스크리닝 환경으로 활용한다.
-시청 중 자연스러운 실시간 대화 + 시청 후 장면 순서 회상 → 객관적 근거 기반 보호자 리포트.
-**AI는 진단명을 내리지 않는다.** 순서 오류·발화 신호 등 근거만 전달한다.
+**팀 공유본 기준: 2026-10-22 / Chrome 확장 0.3.8.** 기존 날짜별 작업 폴더에서 현재 실행 중인 구현을 옮겨 담았습니다. 운영 서버와 사용자 데이터는 포함하지 않습니다. 최종 시연 테스트가 진행 중이며, 아래 알려진 제한을 먼저 확인해 주세요.
 
-> 설계·아키텍처·KPI·인터페이스는 **CLAUDE.md**, 작업 상태·todo는 **PLAN.md**, GPU 서버 세팅은 **SETUP_GPU.md** 참고.
+## 어디부터 보면 되나요?
 
-## Setup (로컬)
+| 경로 | 내용 |
+|---|---|
+| `apps/web/` | 로그인, 영상 목록·시청, 가족 연결·리포트 웹 화면 |
+| `apps/extension/` | YouTube 위에 뜨는 두리, 자동 음성·응답 구간 마이크, Chrome MV3 확장 |
+| `src/api/portal_server.py` | **현재 웹·확장을 함께 연결하는 백엔드 진입점** |
+| `src/api/portal.py`, `welcome.py`, `conversation_memory.py` | 계정·가족 권한, 인사·시청 세션, 다음 대화 기억 |
+| `src/api/live_stt.py`, `runtime_stt.py` | 인증된 실시간 PCM 중계와 음성 전사 |
+| `src/agents/analysis/` | 음향·언어 특징, 회상 분석, 점수·설명 검증 모듈 |
+| `configs/content/team_video_questions.v1.json` | 팀이 작성한 영상별 대화 후보·시점·참고 답변 |
+| `tests/` | 외부 API를 대체한 백엔드 회귀 검사 |
+| [팀 실행 안내](docs/TEAM_HANDOFF.md) | 설치, 계정 연결, 문제 해결, 실제 테스트 순서 |
+
+## 빠른 실행
+
+Python **3.12**, Node.js **22.17 이상**을 기준으로 합니다. 아래 명령은 저장소 루트에서 실행합니다. 최신 Node LTS를 사용해도 되지만 이번 빌드 검증은 22.17 환경입니다.
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # 키 입력 (없으면 .env 직접 작성)
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-demo.txt
+cp .env.example .env
 ```
 
-## Kang 베이스라인 실행
+실제 STT·음성·설명 생성에는 `.env`에 팀이 별도로 전달하는 API 키를 넣어야 합니다. 키가 없어도 서버 시작과 계정 화면 확인은 가능하지만 실제 음성 기능은 성공하지 않습니다. 참조분포 파일이 없으면 점수는 측정 불가로 표시됩니다. 가짜 점수로 대체하지 않습니다.
+
+터미널 1 — 백엔드:
 
 ```bash
-# data/Kang/{HC,MCI}/ 에 wav+cha 배치 후
-python -m src.agents.analysis.run_kang_baseline
+python -m uvicorn src.api.portal_server:app --host 127.0.0.1 --port 8001
 ```
 
-HC vs MCI 분류: 로더 → 음향/언어 피처 → XGBoost subject-level 5-fold CV → AUC + Recall@90%Spec.
+터미널 2 — 웹:
 
-## GPU Live 서버
+```bash
+cd apps/web
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
 
-VSCode Remote-SSH 연결 및 서버 실험은 **SETUP_GPU.md** 및 `setup_server.sh` 참고.
+[http://127.0.0.1:5173/](http://127.0.0.1:5173/)에 접속합니다. 주소는 **각자 컴퓨터의 서버**를 뜻하므로 윤지의 실행 중인 서버에 자동으로 연결되지 않습니다. `npm run preview`는 백엔드 프록시를 포함한 시연 시작 명령이 아닙니다.
+
+터미널 3 — 확장 빌드:
+
+```bash
+cd apps/extension
+npm ci
+npm run build:ext
+```
+
+Chrome의 `chrome://extensions`에서 개발자 모드를 켜고 **압축 해제된 확장 프로그램 로드 → `apps/extension/dist-ext/`**를 선택합니다. 확장 0.3.8을 확인하고, 웹에서 만든 일반 사용자 계정으로 로그인합니다. 설정에서 자동 음성·자동 마이크 여부를 선택할 수 있습니다.
+
+시험 영상: [사랑의 김장 나눔으로 온기 나눠요 — KBS](https://www.youtube.com/watch?v=q-2EmyuAOmM). 기존 YouTube 탭에 구형 확장이 남아 있으면 확장 새로고침 후 해당 탭을 닫고 새로 여세요.
+
+## 현재 검증 범위와 남은 항목
+
+- 로그인·가족 권한·세션 저장·대화 기억·리포트 검증과 확장 상태 전환을 자동 검사합니다. 작성 입력과 가상 API로 진행한 검사는 실제 Chrome 마이크 또는 모델 정확도 검증이 아닙니다.
+- 웹 인사 화면은 서버가 세 개 이상 문장을 보내도 두 번째에서 종료되는 문제가 확인됐습니다.
+- 백엔드에 리포트 설명 생성·검증이 있으나, 현재 웹 가족 화면에서 그 설명을 표시하는 연결이 빠져 있습니다.
+- 확장의 저장 완료 인사는 화면에만 나오며 마지막 인사 TTS가 연결되지 않았습니다.
+- 시청 후 대화는 제공하지만 현재 포털 저장 경로에서 자유 회상 메타데이터·팀 영상 이벤트 그래프가 분석기로 연결되지 않았습니다. 순서 정확도까지 검증됐다고 설명하면 안 됩니다.
+- 팀 영상의 참고 답변은 미검증 상태이므로 자동 정오 채점이 비활성화돼 있습니다. 화면의 부분 분석을 전체 인지 평가 결과로 해석하지 않습니다.
+- 실제 Chrome의 무음 자동 종료, 접기·재열기, 마지막 회상 저장은 최종 사용자 테스트 중입니다.
+- 실시간 영상 이해에 따른 자동 질문 생성은 별도 모듈 연구 범위이며 현재 시연은 준비한 대화 후보를 사용합니다.
+
+## 검사
+
+2026-10-22 공유본 검사: **291개 통과, 과거 인사 순서 검사 1개 명시적 제외**, 웹·확장 빌드 성공. 상세 범위는 [팀 실행 안내의 검증 결과](docs/TEAM_HANDOFF.md#7-공유본-자체-검증-결과-2026-10-22)를 참고합니다.
+
+```bash
+python -m pytest -q tests
+cd apps/web
+npm run build
+cd ../extension
+npm test
+npm run build:ext
+npm run test:frame
+```
+
+기존 날짜 우선 인사 순서를 요구하는 과거 검사 한 개는 현재 스몰토크 우선 검사와 충돌하므로 명시적으로 건너뜁니다. 새 순서는 `test_dialogue_routes.py`에서 확인합니다. 실제 API 호출·실제 음성 전송은 위 회귀 검사에 포함되지 않습니다.
+
+## 저장소에 포함되지 않는 것
+
+API 키, SSH 키, 로그인 세션·DB, 사용자의 녹음·전사, 연구 원자료·개인별 라벨, 학습 결과·참조분포, 방송 영상 원본은 포함하지 않습니다. `data/`는 로컬 비공개 저장용이며 `.gitignore`를 유지해 주세요. 기존 Git 이력은 변경하지 않았습니다.
+
+이전 연구 문서의 명칭과 수치는 작성 당시 기록입니다. 현재 시연 기능의 구현·검증 범위는 이 README와 [팀 실행 안내](docs/TEAM_HANDOFF.md)를 기준으로 봅니다.
