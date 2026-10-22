@@ -54,13 +54,24 @@ def _mattr(tokens: list[str], window: int = 50) -> float:
     return float(np.mean(ttrs))
 
 
-def extract_linguistic(transcript: str, word_timings: list[dict] | None = None) -> dict:
+def extract_linguistic(
+    transcript: str,
+    word_timings: list[dict] | None = None,
+    utterance_texts: list[str] | None = None,
+) -> dict:
     """언어 피처 딕셔너리.
 
     transcript: 참가자 발화 전체 텍스트.
     word_timings: [{'text', 'startTime', 'endTime'}, ...] 발화 단위 타이밍(초).
     """
-    utt_texts = [w["text"] for w in word_timings] if word_timings else [transcript]
+    # 질문별 답변 경계를 알고 있을 때는 이를 발화 단위로 보존한다. 여러 답변을
+    # 공백으로 합치면 전체 세션이 '한 문장'이 되어 문장 길이 점수가 포화된다.
+    utt_texts = (
+        [text for text in (utterance_texts or []) if text.strip()]
+        if utterance_texts is not None
+        else [w["text"] for w in word_timings]
+        if word_timings else [transcript]
+    )
 
     morphs_all: list[str] = []
     tags_all: list[str] = []
@@ -110,21 +121,21 @@ def extract_linguistic(transcript: str, word_timings: list[dict] | None = None) 
         from src.agents.analysis.features.korean_disfluency_rule import (
             ROBUST_FEATURES, analyze as _kr_analyze, to_features as _kr_feats,
         )
-        _utts = utt_texts if word_timings else [transcript]
+        _utts = utt_texts
         _krf = _kr_feats(_kr_analyze(_utts), _utts)
         feats.update({k: _krf[k] for k in ROBUST_FEATURES})
     except Exception:
-        feats.update({k: 0.0 for k in
+        feats.update({k: float("nan") for k in
                       ("krr_incomplete_ending_rate", "krr_fragment_repeat_rate",
                        "krr_demonstrative_rate")})
 
-    # 내용(semantic) 피처 — 시간·장소 지남력, 논리 연결 (형태소당 정규화)
+    # 내용 표현 카운터: 한글 연속구간당 정규화. 위 Kiwi 형태소 지표와 분모가 다름.
     try:
         from src.agents.analysis.features.content_features import extract_content
         feats.update(extract_content(utt_texts if word_timings else [transcript]))
     except Exception:
         from src.agents.analysis.features.content_features import FEATURE_NAMES as _CF
-        feats.update({k: 0.0 for k in _CF})
+        feats.update({k: float("nan") for k in _CF})
 
     # 타이밍 기반: 발화 속도, 응답 특성
     if word_timings:

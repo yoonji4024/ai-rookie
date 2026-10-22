@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {entryMode,localDay} from './platformEntry.ts';
+const initial={ready:true,visible:true,accepted:false,busy:false,today:'2026-10-13',snoozedOn:null};
+test('storage must resolve before showing the invitation',()=>assert.equal(entryMode({...initial,ready:false}),'hidden'));
+test('platform entry only invites; does not start the connected pet',()=>assert.equal(entryMode(initial),'invite'));
+test('background platform tab does not interrupt browsing',()=>assert.equal(entryMode({...initial,visible:false}),'hidden'));
+test('dismissal survives a reload and another tab on the same day',()=>assert.equal(entryMode({...initial,snoozedOn:'2026-10-13'}),'hidden'));
+test('next local day permits a fresh invitation',()=>assert.equal(entryMode({...initial,snoozedOn:'2026-10-12'}),'invite'));
+test('explicit toolbar activation overrides today dismissal',()=>assert.equal(entryMode({...initial,snoozedOn:initial.today,accepted:true}),'pet'));
+test('another tab dismissal cannot remove an active conversation',()=>assert.equal(entryMode({...initial,snoozedOn:initial.today,busy:true}),'pet'));
+test('local day uses local calendar components',()=>assert.equal(localDay(new Date(2026,9,13,0,1)),'2026-10-13'));

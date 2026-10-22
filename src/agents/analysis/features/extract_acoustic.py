@@ -21,7 +21,7 @@ try:
     import parselmouth
     from parselmouth.praat import call
     _HAS_PRAAT = True
-except ImportError:  # 미설치 시 음질 피처는 0으로 채움 (fallback)
+except ImportError:  # 미설치 시 음질 피처는 결측(NaN)
     _HAS_PRAAT = False
 
 SR = 16000
@@ -156,9 +156,9 @@ def _voice_features(y: np.ndarray, sr: int) -> dict:
     def _safe(fn):
         try:
             v = fn()
-            return float(v) if v == v else 0.0   # NaN 방어
+            return float(v) if v == v else float("nan")
         except Exception:
-            return 0.0
+            return float("nan")
 
     pp = call(snd, "To PointProcess (periodic, cc)", 60, 400)
     hnr = _safe(lambda: call(

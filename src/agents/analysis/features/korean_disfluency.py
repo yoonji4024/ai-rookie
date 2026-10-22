@@ -84,6 +84,32 @@ def _empty() -> dict:
     return {m: {"count": 0, "evidence": []} for m in MARKERS}
 
 
+def _failed(reason: str) -> dict:
+    return {**{m: {"count": None, "evidence": []} for m in MARKERS}, "_error": reason}
+
+
+def validate_markers(value: object, text: str) -> dict:
+    """Validate the output contract, not the semantic correctness of a marker."""
+    if not isinstance(value, dict) or set(value) != set(MARKERS):
+        raise LLMError("마커 출력의 필수 항목 불일치")
+    result = {}
+    for marker in MARKERS:
+        item = value[marker]
+        if not isinstance(item, dict) or set(item) != {"count", "evidence"}:
+            raise LLMError("마커 항목의 구조 오류")
+        count, evidence = item["count"], item["evidence"]
+        if type(count) is not int or count < 0:
+            raise LLMError("마커 횟수는 0 이상의 정수여야 함")
+        if not isinstance(evidence, list) or len(evidence) > 3:
+            raise LLMError("마커 근거 형식 오류")
+        if (count == 0 and evidence) or (count > 0 and not evidence):
+            raise LLMError("마커 횟수와 근거 불일치")
+        if any(not isinstance(e, str) or not e.strip() or e not in text for e in evidence):
+            raise LLMError("마커 근거가 전사 원문에 없음")
+        result[marker] = {"count": count, "evidence": list(evidence)}
+    return result
+
+
 def analyze_chunk(text: str, raise_on_error: bool = False) -> dict:
     """짧은 텍스트 1개 분석 (청크 단위).
 
@@ -91,30 +117,20 @@ def analyze_chunk(text: str, raise_on_error: bool = False) -> dict:
        (실제로 77명 전원 0이 나와 검증이 무의미해진 적 있음)
        → 실패 시 '_error'를 남기고, raise_on_error=True면 예외를 올린다.
     """
-    text = text.strip()[:MAX_CHARS]
-    if not text:
-        return _empty()
     try:
+        text = text.strip()
+        if not text:
+            raise LLMError("분석할 전사가 없음")
+        if len(text) > MAX_CHARS:
+            raise LLMError("청크 길이 한도 초과: 전사를 잘라서 채점하지 않음")
         out = chat_json("midm", SYSTEM, f"[발화 전사]\n{text}\n\n마커를 찾아 JSON으로 답하세요.",
                         temperature=0.0)
+        return validate_markers(out, text)
     except LLMError as e:
         if raise_on_error:
             raise
-        r = _empty()
-        r["_error"] = str(e)[:300]
-        return r
-
-    res = _empty()
-    for m in MARKERS:
-        v = out.get(m) or {}
-        if isinstance(v, dict):
-            try:
-                res[m]["count"] = max(0, int(v.get("count", 0)))
-            except (TypeError, ValueError):
-                pass
-            ev = v.get("evidence") or []
-            res[m]["evidence"] = [str(e) for e in ev][:3] if isinstance(ev, list) else []
-    return res
+        # Provider/parser exception bodies may contain source text. Keep only type.
+        return _failed("마커 측정 실패: " + type(e).__name__)
 
 
 def _chunks(utterances: list[str], size: int = CHUNK_UTTERANCES) -> list[str]:
@@ -143,9 +159,11 @@ def analyze(utterances: list[str] | str, n_utterances: int = 0,
         import re
         utterances = [s for s in re.split(r"(?<=[.!?…])\s+", utterances.strip()) if s]
 
-    parts = _chunks(utterances)
+    parts = _chunks([u.strip() for u in utterances if u.strip()])
     if not parts:
-        return _empty()
+        if raise_on_error:
+            raise LLMError("분석할 전사가 없음")
+        return {**_failed("분석할 전사가 없음"), "_n_chunks": 0}
 
     total = _empty()
     errors = []
@@ -164,7 +182,7 @@ def analyze(utterances: list[str] | str, n_utterances: int = 0,
             print(f"      청크 {i}/{len(parts)}: 마커 {n}개")
 
     if errors and len(errors) == len(parts):
-        total["_error"] = f"전 청크 실패: {errors[0]}"
+        total = _failed(f"전 청크 실패: {errors[0]}")
     elif errors:
         total["_partial_error"] = f"{len(errors)}/{len(parts)} 청크 실패"
     total["_n_chunks"] = len(parts)
@@ -176,10 +194,15 @@ def to_features(markers: dict, n_utterances: int) -> dict:
 
     ⚠️ 발화 수로 나눠 **길이 편향을 제거**한다(총량 그대로 쓰면 말 많이 한 사람이 불리).
     """
-    n = max(1, n_utterances)
-    feats = {f"kr_{m}_rate": markers.get(m, {}).get("count", 0) / n for m in MARKERS}
-    feats["kr_disfluency_total"] = sum(
-        markers.get(m, {}).get("count", 0) for m in MARKERS) / n
+    keys = [f"kr_{m}_rate" for m in MARKERS] + ["kr_disfluency_total"]
+    if (markers.get("_error") or markers.get("_partial_error") or
+            type(n_utterances) is not int or n_utterances <= 0):
+        return dict.fromkeys(keys)
+    counts = [markers.get(m, {}).get("count") for m in MARKERS]
+    if any(type(count) is not int or count < 0 for count in counts):
+        return dict.fromkeys(keys)
+    feats = {f"kr_{m}_rate": count / n_utterances for m, count in zip(MARKERS, counts)}
+    feats["kr_disfluency_total"] = sum(counts) / n_utterances
     return feats
 
 
@@ -198,19 +221,19 @@ def build_cache(out: Path = CACHE, limit: int | None = None) -> dict:
             continue
         utts = [u.text for u in r.par_utterances if u.text]
         m = analyze(utts, len(utts))
-        err = m.pop("_error", None)
-        partial = m.pop("_partial_error", None)
-        n_chunks = m.pop("_n_chunks", 0)
+        err = m.get("_error")
+        partial = m.get("_partial_error")
+        n_chunks = m.get("_n_chunks", 0)
         cache[r.subject_id] = {
             "label": r.label,
             "n_utterances": len(utts),
             "n_chunks": n_chunks,
-            "markers": m,
+            "markers": {key: m[key] for key in MARKERS},
             "features": to_features(m, len(utts)),
             **({"error": err} if err else {}),
             **({"partial_error": partial} if partial else {}),
         }
-        total = sum(v["count"] for v in m.values())
+        total = sum(m[key]["count"] or 0 for key in MARKERS)
         if err:
             n_fail += 1
             print(f"  [{i}/{len(recs)}] {r.subject_id} ⚠️ 실패: {err[:80]}")

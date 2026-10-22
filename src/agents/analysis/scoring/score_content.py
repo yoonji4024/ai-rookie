@@ -39,11 +39,19 @@ class ContentScoringModel:
                 if f not in idx or f in m.hc_mean:
                     continue
                 i = idx[f]
-                sd = float(hc[:, i].std())
-                m.hc_mean[f] = float(hc[:, i].mean())
+                hc_col = hc[:, i]
+                mci_col = mci[:, i]
+                hc_valid = hc_col[np.isfinite(hc_col)]
+                mci_valid = mci_col[np.isfinite(mci_col)]
+                if len(hc_valid) == 0:
+                    continue
+                mu = float(hc_valid.mean())
+                sd = float(hc_valid.std())
+                mci_mu = float(mci_valid.mean()) if len(mci_valid) else mu
+                m.hc_mean[f] = mu
                 m.hc_std[f] = sd if sd > 1e-12 else 1.0
                 # 방향은 데이터가 정한다 (직관 아님)
-                m.direction[f] = 1.0 if hc[:, i].mean() >= mci[:, i].mean() else -1.0
+                m.direction[f] = 1.0 if mu >= mci_mu else -1.0
         return m
 
     # ── 저장 / 로드 ─────────────────────────────────────────
@@ -74,17 +82,32 @@ class ContentScoringModel:
             usable = [f for f in members if f in self.hc_mean and f in idx]
             if not usable:
                 continue
-            zs, detail = [], {}
+            zs, detail, missing = [], {}, []
             for f in usable:
                 raw = float(x[idx[f]])
+                if (not np.isfinite(raw)
+                        or not np.isfinite(self.hc_mean[f])
+                        or not np.isfinite(self.hc_std[f])):
+                    missing.append(f)
+                    continue
                 z = float(np.clip((raw - self.hc_mean[f]) / self.hc_std[f] * self.direction[f],
                                   -Z_CLIP, Z_CLIP))
                 zs.append(z)
                 detail[f] = {"value": round(raw, 4), "hc_mean": round(self.hc_mean[f], 4),
                              "z": round(z, 3)}
+            if not zs:
+                out[axis] = {"score": None, "z": None, "features": {},
+                             "missing": missing, "validated": True}
+                continue
             az = float(np.mean(zs))
             out[axis] = {"score": _z_to_score(az), "z": round(az, 3),
                          "features": detail, "validated": True}
+            if missing:
+                out[axis]["missing"] = missing
+        if "시간·장소 지남력" in out:
+            # Identify this newly computed source explicitly. Do not infer it
+            # later from an old report's score or label alone.
+            out["시간·장소 지남력"]["measurement_source"] = "transcript_expression_reference"
         return out
 
     def score_all(self, x: np.ndarray, recall: dict | None = None,
@@ -102,8 +125,11 @@ class ContentScoringModel:
         return {
             "axes": axes,
             "total_score": total,
-            "grade": grade_of(total),
-            "weakest": [a for a, _ in sorted(axes.items(), key=lambda kv: kv[1]["score"])[:2]],
+            "grade": grade_of(total) if total is not None else "측정 불가",
+            "weakest": [a for a, _ in sorted(
+                ((a, v) for a, v in axes.items() if v.get("score") is not None),
+                key=lambda kv: kv[1]["score"],
+            )[:2]],
             "note": ("전사 기반 축은 Kang으로 검증됨. 회상 기반 축(기억 정확도·문맥 일치도)은 "
                      "객관적 정답 대비 산출이나 MCI 판별력은 미검증."),
         }
@@ -113,11 +139,12 @@ def _z_to_score(z: float) -> int:
     return int(round(100 * float(norm.cdf(z + Z_SHIFT))))
 
 
-def _weighted_total(axes: dict) -> int:
-    if not axes:
-        return 0
-    num = sum(a["score"] * AXIS_WEIGHTS.get(k, 1.0) for k, a in axes.items())
-    den = sum(AXIS_WEIGHTS.get(k, 1.0) for k in axes)
+def _weighted_total(axes: dict) -> int | None:
+    valid = {k: a for k, a in axes.items() if a.get("score") is not None}
+    if not valid:
+        return None
+    num = sum(a["score"] * AXIS_WEIGHTS.get(k, 1.0) for k, a in valid.items())
+    den = sum(AXIS_WEIGHTS.get(k, 1.0) for k in valid)
     return int(round(num / den))
 
 

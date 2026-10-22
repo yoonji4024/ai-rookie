@@ -40,10 +40,19 @@ class ScoringModel:
         hc, mci = X[y == 0], X[y == 1]
         for f in _rubric_features(feature_names):
             i = idx[f]
-            mu, sd = float(hc[:, i].mean()), float(hc[:, i].std())
+            hc_col = hc[:, i]
+            mci_col = mci[:, i]
+            hc_valid = hc_col[np.isfinite(hc_col)]
+            mci_valid = mci_col[np.isfinite(mci_col)]
+            # 계산 불가를 NaN으로 보존한 뒤에는 fit도 결측을 건너뛰어야 한다.
+            # 일반 mean/std를 쓰면 HC 한 명의 NaN만으로 참조분포 전체가 NaN이 된다.
+            if len(hc_valid) == 0:
+                continue
+            mu, sd = float(hc_valid.mean()), float(hc_valid.std())
+            mci_mu = float(mci_valid.mean()) if len(mci_valid) else mu
             m.hc_mean[f] = mu
             m.hc_std[f] = sd if sd > 1e-12 else 1.0
-            m.direction[f] = 1.0 if hc[:, i].mean() >= mci[:, i].mean() else -1.0
+            m.direction[f] = 1.0 if mu >= mci_mu else -1.0
         return m
 
     # ── transform ──────────────────────────────────────────
@@ -62,7 +71,9 @@ class ScoringModel:
                 raw = float(x[idx[f]])
                 # 계산 불가(NaN)는 **결측**이다. 0으로 취급하면 z=-8 같은 값이 생겨
                 # 추출 실패가 병리 신호로 둔갑한다 → 축 평균에서 제외한다.
-                if not np.isfinite(raw):
+                if (not np.isfinite(raw)
+                        or not np.isfinite(self.hc_mean[f])
+                        or not np.isfinite(self.hc_std[f])):
                     missing.append(f)
                     continue
                 z = (raw - self.hc_mean[f]) / self.hc_std[f] * self.direction[f]
@@ -92,7 +103,7 @@ class ScoringModel:
         return {
             "axes": axes_out,
             "total_score": total,
-            "grade": grade_of(total),
+            "grade": grade_of(total) if total is not None else "측정 불가",
             "weakest": _weakest(axes_out, k=2),
         }
 
@@ -122,7 +133,10 @@ class ScoringModel:
                    hc_std=d["hc_std"], direction=d["direction"])
 
     def total_scores(self, X: np.ndarray) -> np.ndarray:
-        return np.array([r["total_score"] for r in self.score_many(X)], dtype=float)
+        return np.array([
+            np.nan if r["total_score"] is None else r["total_score"]
+            for r in self.score_many(X)
+        ], dtype=float)
 
 
 # ── helpers ────────────────────────────────────────────────
@@ -141,11 +155,11 @@ def _z_to_score(z: float) -> int:
     return int(round(100 * float(norm.cdf(z + Z_SHIFT))))
 
 
-def _weighted_total(axes_out: dict) -> int:
+def _weighted_total(axes_out: dict) -> int | None:
     """결측 축(score=None)은 총점 계산에서 제외한다."""
     valid = {a: v for a, v in axes_out.items() if v.get("score") is not None}
     if not valid:
-        return 0
+        return None
     num = sum(valid[a]["score"] * AXIS_WEIGHTS.get(a, 1.0) for a in valid)
     den = sum(AXIS_WEIGHTS.get(a, 1.0) for a in valid)
     return int(round(num / den))

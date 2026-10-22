@@ -1,6 +1,7 @@
 """타이밍 게이트 — 시청 중 질문 여부·시점 결정.
 
-CLAUDE.md §3: draft(A.X K1) → judge(EXAONE) → refine 3단계.
+현재 배치: draft(A.X K2) → judge(Solar) → refine 3단계.
+E06의 draft 평가는 K1 기준이며, 운영사 K2 전환 이후의 품질 근거는 아니다.
              rule-based hard block이 API 호출 **앞단**에서 RPS·방해를 차단.
 
 핵심 목적: 시청을 방해하지 않으면서 자연스러운 대화 신호를 얻는 것.
@@ -113,7 +114,7 @@ def decide_question(context: dict) -> dict:
         return {"action": "silence", "question": None, "timing": t,
                 "stage": "hard_block", "reason": "최근 발화 없음"}
 
-    # ── 2단계: draft (A.X K1) ──
+    # ── 2단계: draft (A.X 공통 서빙 설정) ──
     try:
         draft = chat_json(
             "ax", DRAFT_SYSTEM,
@@ -124,15 +125,28 @@ def decide_question(context: dict) -> dict:
         return {"action": "silence", "question": None, "timing": t,
                 "stage": "draft", "reason": f"draft 실패: {e}"}
 
-    candidates = draft.get("candidates") or []
+    # Keep candidate positions intact: dropping malformed items would change
+    # which question the judge's index selects.
+    if (not isinstance(draft, dict)
+            or not isinstance(draft.get("candidates"), list)
+            or len(draft["candidates"]) > 3
+            or ("silence_ok" in draft and type(draft["silence_ok"]) is not bool)
+            or any(not isinstance(c, dict)
+                   or not isinstance(c.get("question"), str)
+                   or not c["question"].strip()
+                   or ("reason" in c and not isinstance(c["reason"], str))
+                   for c in draft["candidates"])):
+        return {"action": "silence", "question": None, "timing": t,
+                "stage": "draft", "reason": "질문 후보 응답 형식 불일치"}
+    candidates = draft["candidates"]
     if not candidates:
         return {"action": "silence", "question": None, "timing": t,
                 "stage": "draft", "reason": "후보 없음"}
 
-    # ── 3단계: judge (EXAONE) ──
+    # ── 3단계: judge (Solar, E06 비교·제품 한도 검증) ──
     try:
         judge = chat_json(
-            "exaone", JUDGE_SYSTEM,
+            "solar", JUDGE_SYSTEM,
             "[방금 지나간 내용]\n" + recent
             + "\n\n[질문 후보]\n"
             + json.dumps(candidates, ensure_ascii=False, indent=1)
@@ -143,12 +157,20 @@ def decide_question(context: dict) -> dict:
         return {"action": "silence", "question": None, "timing": t,
                 "stage": "judge", "reason": f"judge 실패(보수적 침묵): {e}"}
 
-    if judge.get("action") != "ask":
+    if (not isinstance(judge, dict)
+            or judge.get("action") not in ("ask", "silence")
+            or ("reason" in judge and not isinstance(judge["reason"], str))):
+        return {"action": "silence", "question": None, "timing": t,
+                "stage": "judge", "reason": "질문 시점 판정 형식 불일치"}
+
+    if judge["action"] != "ask":
         return {"action": "silence", "question": None, "timing": t,
                 "stage": "judge", "reason": judge.get("reason", "판정: 침묵")}
 
-    idx = int(judge.get("best_index", 0))
-    idx = idx if 0 <= idx < len(candidates) else 0
+    idx = judge.get("best_index")
+    if type(idx) is not int or not 0 <= idx < len(candidates):
+        return {"action": "silence", "question": None, "timing": t,
+                "stage": "judge", "reason": "유효한 질문 번호가 없음"}
     question = _refine(candidates[idx].get("question", ""))
 
     return {"action": "ask", "question": question, "timing": t,

@@ -171,6 +171,12 @@ class AXSTT:
         #    바이트로 읽어 Content-Length를 명시해야 통과한다.
         raw = path.read_bytes()
         url = f"{BASE}/v1/stt/upload/{token}"
+        media_type = {
+            ".wav": "audio/wav",
+            ".m4a": "audio/mp4",
+            ".mp4": "audio/mp4",
+            ".caf": "audio/x-caf",
+        }.get(path.suffix.lower(), "application/octet-stream")
 
         def _put(headers: dict):
             return requests.put(url, headers=headers, data=raw, timeout=self.timeout)
@@ -178,8 +184,13 @@ class AXSTT:
         attempts = [
             {**self.headers, "Content-Type": "application/octet-stream",
              "Content-Length": str(len(raw))},
-            # WAF가 인증 헤더나 octet-stream을 문제 삼는 경우 대비
-            {"Content-Type": "audio/wav", "Content-Length": str(len(raw))},
+            # 실제 파일 형식을 명시한 인증 요청. 이전에는 M4A/CAF까지 audio/wav로
+            # 보내 형식 불일치가 WAF 오탐을 유발할 수 있었다.
+            {**self.headers, "Content-Type": media_type,
+             "Content-Length": str(len(raw))},
+            # 업로드 토큰 자체가 인증인 배포 환경을 위한 무인증 조합.
+            {"Content-Type": "application/octet-stream", "Content-Length": str(len(raw))},
+            {"Content-Type": media_type, "Content-Length": str(len(raw))},
         ]
         r = None
         for i, h in enumerate(attempts, 1):
@@ -242,6 +253,141 @@ class AXSTT:
                     continue
                 raise
         raise STTError(f"재시도 소진: {last}")
+
+    def transcribe_streaming(self, audio_path: str | Path,
+                             keywords: list[str] | None = None) -> Transcript:
+        """공식 Streaming API로 녹음 파일을 실시간 속도로 전송한다.
+
+        Batch의 파일 PUT이 WAF에 거절될 때 사용하는 폴백이다. Streaming 규격은
+        16kHz/16bit/mono 헤더 없는 PCM 청크이므로 입력 형식과 무관하게 ffmpeg로
+        표준 WAV를 만든 뒤 ``wave.readframes``로 헤더를 제외해 전송한다.
+        """
+        import asyncio
+        import subprocess
+
+        source = Path(audio_path)
+        with tempfile.TemporaryDirectory(prefix="ax_stt_stream_") as tmp_name:
+            wav_path = Path(tmp_name) / "audio_16k.wav"
+            subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+                "-i", str(source), "-ar", "16000", "-ac", "1",
+                "-c:a", "pcm_s16le", str(wav_path),
+            ], check=True, timeout=45)
+            return asyncio.run(self._stream_pcm_wav(wav_path, keywords or []))
+
+    async def _stream_pcm_wav(self, wav_path: Path,
+                              keywords: list[str]) -> Transcript:
+        import asyncio
+        import base64
+        import certifi
+        import json
+        import ssl
+        import wave
+
+        try:
+            import websockets
+        except ImportError as exc:
+            raise STTError("Streaming 폴백에 websockets 패키지가 필요함") from exc
+
+        tr_id = f"memflix-{uuid.uuid4().hex[:12]}"
+        url = f"{WS_BASE}/v1/stt/realtime"
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
+        utterances: list[Utterance] = []
+        last_partial = ""
+
+        with wave.open(str(wav_path), "rb") as wf:
+            sample_rate = wf.getframerate()
+            if sample_rate != 16000 or wf.getnchannels() != 1 or wf.getsampwidth() != 2:
+                raise STTError("Streaming 오디오는 16kHz/16bit/mono PCM이어야 함")
+            chunk_frames = int(sample_rate * 0.1)  # 공식 권장 범위 내 100ms
+            duration = wf.getnframes() / sample_rate
+            # 기본은 API 가이드의 실시간 속도(1.0). 시연 환경에서 더 빠른 전송이
+            # 누락 없이 동작하는지 실측할 때만 환경변수로 낮춰 비교한다.
+            try:
+                pacing = min(1.0, max(0.05, float(
+                    os.environ.get("AX_STT_STREAM_PACING", "1.0")
+                )))
+            except ValueError:
+                pacing = 1.0
+
+            try:
+                async with websockets.connect(
+                    url,
+                    additional_headers=self.headers,
+                    ssl=ssl_context,
+                    open_timeout=15,
+                    close_timeout=5,
+                ) as ws:
+                    create = {
+                        "message_type": "create",
+                        "speech_model": MODEL_STREAM,
+                        "audio_format": "pcm_16k",
+                        "vad_type": "semantic",
+                        "partial": True,
+                        "tr_id": tr_id,
+                    }
+                    if keywords:
+                        create["keywords"] = keywords
+                    await ws.send(json.dumps(create, ensure_ascii=False))
+                    created = json.loads(await asyncio.wait_for(ws.recv(), timeout=15))
+                    if created.get("message_type") != "created" or created.get("code") != 0:
+                        raise STTError(f"Streaming 채널 생성 실패: {created.get('error', created)}")
+
+                    async def receive_results():
+                        nonlocal last_partial
+                        try:
+                            async for raw in ws:
+                                data = json.loads(raw)
+                                message_type = data.get("message_type")
+                                if message_type == "transcript":
+                                    text = str(data.get("text", "")).strip()
+                                    if not text:
+                                        continue
+                                    if data.get("final"):
+                                        if not utterances or utterances[-1].text != text:
+                                            utterances.append(Utterance(
+                                                text=text,
+                                                start=float(data.get("start_time", 0.0)),
+                                                end=float(data.get("end_time", duration)),
+                                            ))
+                                    else:
+                                        last_partial = text
+                                elif message_type == "stopped":
+                                    return
+                                elif data.get("code", 0) not in (0, None):
+                                    raise STTError(f"Streaming 인식 실패: {data}")
+                        except websockets.exceptions.ConnectionClosed as exc:
+                            # 일부 게이트웨이는 stopped/close 프레임 없이 연결을 닫는다.
+                            # 그 전에 최종/중간 전사를 받았다면 결과는 보존한다.
+                            if not utterances and not last_partial:
+                                raise STTError(f"Streaming 연결 조기 종료: {exc}") from exc
+
+                    receiver = asyncio.create_task(receive_results())
+                    while True:
+                        chunk = wf.readframes(chunk_frames)
+                        if not chunk:
+                            break
+                        await ws.send(json.dumps({
+                            "message_type": "audio",
+                            "data": base64.b64encode(chunk).decode("ascii"),
+                        }))
+                        # 파일을 몰아서 보내면 VAD/인식 서버가 청크를 누락할 수 있으므로
+                        # 가이드대로 실제 재생 속도를 유지한다.
+                        await asyncio.sleep(0.1 * pacing)
+
+                    await ws.send(json.dumps({"message_type": "stop"}))
+                    timeout = max(30.0, duration + 20.0)
+                    await asyncio.wait_for(receiver, timeout=timeout)
+            except STTError:
+                raise
+            except Exception as exc:
+                raise STTError(f"Streaming 연결/인식 실패: {type(exc).__name__}: {exc}") from exc
+
+        if not utterances and last_partial:
+            utterances.append(Utterance(last_partial, 0.0, duration))
+        if not utterances:
+            raise STTError("Streaming 전사 결과가 비어 있음")
+        return Transcript(utterances=utterances, duration=duration)
 
     @staticmethod
     def _parse(d: dict) -> Transcript:
