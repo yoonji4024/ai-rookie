@@ -1,6 +1,4 @@
 @import '@fontsource/jua/400.css';
-@import '@fontsource/open-sans/300.css';
-@import '@fontsource/open-sans/600.css';
 :root{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#242424;background:#fdfdfd;font-synthesis:none;color-scheme:light}
 *{box-sizing:border-box}html,body,#root{margin:0;min-height:100%;background:#fdfdfd}body{min-height:100vh}a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}button:disabled{cursor:wait;opacity:.65}a:focus-visible,button:focus-visible{outline:3px solid #a65a00;outline-offset:4px}
 .launcher{padding:22px 24px 16px;background:#fdfdfd}.launcher.compact{width:350px;max-width:100vw}.launcher header{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:15px;font-weight:850;letter-spacing:.06em;color:#444444}.status{font-size:12px;color:#595037;background:#fdf4d9;border-radius:20px;padding:5px 9px}
@@ -12,23 +10,36 @@
 .dialogue-settings{margin:28px 0;padding:24px;text-align:left;border:1px solid #e7e7e7;border-radius:20px;background:#fffcf8;display:flex;flex-direction:column;gap:20px}
 .dialogue-settings h2{margin:0;font-size:23px}.dialogue-settings label{display:flex;gap:16px;align-items:center;justify-content:space-between;font-size:16px;line-height:1.6}.dialogue-settings input[type=checkbox]{width:24px;height:24px;flex-shrink:0;accent-color:#444444}.dialogue-settings select{padding:12px;font:inherit;max-width:65%;border:1px solid #e7e7e7;border-radius:10px;background:white}.dialogue-settings p{font-size:14px;line-height:1.7;margin:0;color:#595037}.dialogue-settings input[type=range]{width:45%;accent-color:#444444}
 
-/* MEMFLIX design guide (2026-10-28) */
-.launcher header{position:relative}
-.brand{display:inline-block;margin-top:-22px;padding:8px 18px;background:#444;color:#fff;border-radius:0 0 12px 12px;font-family:'Open Sans',sans-serif;font-weight:300;letter-spacing:.28em;box-shadow:0 2px 3px #00000026}
-.compact .brand{margin-top:-20px}
-.status{border-radius:999px;color:#a65a00;font-weight:600}
-.launcher h1,.settings h1{font-family:'Jua',-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:400;color:#242424}
-.hl{font-style:normal;color:#fd9f28}
-.launcher-actions a,.launcher-actions button,.launcher-login .primary{border-radius:999px}
-.launcher-actions .primary,.launcher-actions button,.launcher-login .primary{background:#fd9f28;color:#242424;font-weight:700}
-.launcher-actions .primary:hover,.launcher-actions button:hover{background:#f08c0c}
-.text-action,.feedback,.launcher-login a{color:#a65a00}
-.launcher-login input:focus{border-color:#fd9f28}
-html:has(.settings),html:has(.settings) body,html:has(.settings) #root{background:#f0f0f0}
-.settings{background:#fdfdfd;border:2px solid #434343;border-radius:30px;position:relative;padding-top:44px}
-.settings>header .brand{margin-top:-46px}
-.dialogue-settings{background:#f8f8f8;border:0;position:relative;padding-top:0}
-.dialogue-settings h2{align-self:flex-start;margin:0;padding:8px 22px;background:#444;color:#fff;border-radius:0 0 14px 14px;font-size:17px;font-weight:500}
-.dialogue-settings input[type=checkbox],.dialogue-settings input[type=range]{accent-color:#fd9f28}
-.dialogue-settings select{border-radius:12px}
-.settings-detail h2{display:inline-block;padding:6px 18px;background:#444;color:#fff;border-radius:12px 12px 12px 0;font-size:15px;font-weight:500}
+/* MEMFLIX design guide — "정말 쉬운 디지털 교육" leaflet (2026-10-28) */
+:root{color:#595959;background:#fffbec}
+html,body,#root{background:linear-gradient(#fffbec 0 50%,#fee9bc 50%)}
+.launcher{background:transparent}
+.brand{display:inline-flex;align-items:center;gap:6px;padding:4px 16px;background:#fafafa;border:2px solid #eeeeee;border-radius:999px;box-shadow:0 2px 4px #0000000f;font-family:'Jua',-apple-system,"Apple SD Gothic Neo",sans-serif;font-weight:400;font-size:17px;letter-spacing:.04em;color:#595959}
+.brand::before{content:"";width:11px;height:11px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#ffb109}
+.status{background:#e6f7ff;color:#2f86c9;border-radius:999px;font-weight:700}
+.pet-portrait{background:#e6f7ff;box-shadow:0 0 0 8px #fff,0 0 0 14px #fdbc67}
+.pet-dot{background:#78c77c;border-color:#fff}
+.launcher h1,.settings h1{font-family:'Jua',-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:400;color:#595959}
+.hl{font-style:normal;color:#2f86c9}
+.intro,.launcher-login p,.settings-detail p{color:#6d6d6d;font-weight:500}
+.launcher-actions a,.launcher-actions button,.launcher-login .primary{border-radius:999px;font-weight:700}
+.launcher-actions .primary,.launcher-actions button,.launcher-login .primary{background:#fdbc67;color:#4a4a4a}
+.launcher-actions .primary:hover,.launcher-actions button:hover{background:#f9ad4a}
+.launcher-actions .secondary{background:#fff;border:2px solid #eeeeee;color:#595959}
+.microphone-note{color:#787878}
+.launcher footer{border-top:2px dotted #cacaca;color:#787878}
+.text-action,.feedback,.launcher-login a{color:#2f86c9;font-weight:700}
+.launcher-login input{border:2px solid #eeeeee;border-radius:14px}
+.launcher-login input:focus{border-color:#a0d6ef}
+.settings{background:#fdfdfd;border:14px solid #eeeeee;border-radius:34px;box-shadow:0 0 0 14px #fdbc67;margin:46px auto}
+.dialogue-settings{background:#fffbec;border:0;border-radius:22px}
+.dialogue-settings h2{align-self:center;padding:4px 24px;background:#fafafa;border:2px solid #eeeeee;border-radius:999px;box-shadow:0 2px 4px #0000000f;font-family:'Jua',-apple-system,"Apple SD Gothic Neo",sans-serif;font-weight:400;font-size:20px;color:#595959}
+.dialogue-settings label{color:#595959;font-weight:500}
+.dialogue-settings p{color:#6d6d6d}
+.dialogue-settings input[type=checkbox],.dialogue-settings input[type=range]{accent-color:#fdbc67}
+.dialogue-settings select{border:2px solid #eeeeee;border-radius:14px}
+.settings-detail{border-top:2px dotted #cacaca}
+.settings-detail h2{color:#3e9a44;font-family:'Jua',-apple-system,"Apple SD Gothic Neo",sans-serif;font-weight:400;font-size:19px}
+.settings-detail h2~h2{color:#2f86c9}
+@media(max-width:500px){.settings{margin:14px;border-width:10px;box-shadow:0 0 0 10px #fdbc67}}
+.pet-portrait,.compact .pet-portrait{margin:30px auto 26px}

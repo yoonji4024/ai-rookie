@@ -9,9 +9,6 @@ import {currentAccount,logout,startWatch,type Account,type WatchPlan} from './li
 import {localVideoSource} from './lib/localVideo';
 import '@fontsource-variable/noto-sans-kr';
 import '@fontsource/jua/400.css';
-import '@fontsource/open-sans/300.css';
-import '@fontsource/open-sans/600.css';
-import '@fontsource/open-sans/700.css';
 import './theme.css';
 import './design-guide.css';
 export default function App(){

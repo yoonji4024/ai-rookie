@@ -1,5 +1,4 @@
 @import '@fontsource/jua/400.css';
-@import '@fontsource/open-sans/600.css';
 :root{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#242424;color-scheme:light}
 *{box-sizing:border-box}body{margin:0;background:transparent}
 /* Size from the host browser viewport. The iframe itself shrinks to 128px
@@ -36,24 +35,38 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,su
 
 .connected-card:has(.dialogue){height:min(calc(690 * var(--pet-unit)),calc(var(--pet-view-height,720px) - 156px))}.connected-card:has(.dialogue) .card-body{flex:1}.card-header strong{margin-right:auto;min-width:0;overflow-wrap:anywhere}.heard-transcript{padding:16px;border-radius:14px;background:#fdf4d9;display:flex;flex-direction:column;gap:10px}.heard-transcript p{color:#242424}.connected-card .heard-transcript button{font-size:calc(13 * var(--pet-unit));min-height:40px}.dialogue{min-height:112px}.card-header{gap:10px}
 
-/* MEMFLIX design guide (2026-10-28): orange #FD9F28 fills, charcoal #444 structure,
-   warm-gray body #595037, Jua display titles, pill buttons, hanging charcoal tab. */
-.connected-card{border-width:2px;position:relative}
-.connected-card::before{content:"";position:absolute;top:0;left:25%;width:50%;height:10px;background:#444;border-radius:0 0 10px 10px;box-shadow:0 2px 3px #00000026}
-.card-header{padding-top:calc(26 * var(--pet-unit));border-bottom-width:3px}
-.card-header strong{font-family:'Open Sans',sans-serif;font-weight:600;letter-spacing:.24em;color:#444}
-.card-header span{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
-.connected-card h2{font-family:'Jua',-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:400;color:#242424}
-.connected-card button{border-radius:999px;font-weight:500}
-.connected-card .primary{background:#fd9f28;border-color:#fd9f28;color:#242424;font-weight:700}
-.connected-card .primary:hover:not(:disabled){background:#f08c0c;border-color:#f08c0c}
-.connected-card .collapse{border-radius:50%;color:#444}
-.connected-card .quiet{color:#7a725e}
-.connected-card input,.connected-card select{border-radius:12px}
-.connected-card input:focus,.connected-card select:focus{border-color:#fd9f28}
-.eyebrow,.session-title{font-weight:600}
-.notice,.memory,.heard-transcript{border-radius:14px}
-.speech-controls{border-top-width:3px}
-.connected-card .mic-button{background:#fd9f28;border-color:#fd9f28;color:#242424;font-weight:700;border-radius:999px}
-.speech-controls[data-recording="true"] .mic-button{color:#fff}
-.speech-controls[data-recording="true"] .status-dot{box-shadow:0 0 0 4px #fd9f2840}
+/* MEMFLIX design guide — "정말 쉬운 디지털 교육" leaflet (2026-10-28):
+   apricot #FDBC67 / sky #A0D6EF / green #78C77C number colors, gray-only text,
+   thick light-gray bezel (smartphone motif), white pill labels, dotted separators. */
+:root{color:#595959}
+.connected-card{background:#fff;border:8px solid #f2f2f2;border-radius:26px;box-shadow:0 0 0 3px #fdbc67,0 12px 36px #0000002e}
+.card-header{border-bottom:2px dotted #cacaca;color:#595959}
+.card-header strong{font-family:'Jua',-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:400;font-size:calc(19 * var(--pet-unit));letter-spacing:.04em;color:#595959}
+.card-header strong::before{content:"";display:inline-block;width:12px;height:12px;margin-right:8px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#ffb109;vertical-align:1px}
+.card-header span{font-weight:500;color:#787878}
+.connected-card h2{font-family:'Jua',-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:400;color:#595959}
+.connected-card p{color:#6d6d6d;font-weight:500}
+.connected-card button{border:2px solid #eeeeee;border-radius:999px;background:#fff;color:#595959;font-weight:700}
+.connected-card .primary{background:#fdbc67;border-color:#fdbc67;color:#4a4a4a}
+.connected-card .primary:hover:not(:disabled){background:#f9ad4a;border-color:#f9ad4a}
+.connected-card button:disabled{background:#f2f2f2;border-color:#eeeeee;color:#7d7d7d}
+.connected-card .collapse{border-radius:50%;background:#fafafa}
+.connected-card .quiet{border-color:transparent;background:transparent;color:#787878}
+.connected-card input,.connected-card select{border:2px solid #eeeeee;border-radius:14px;color:#595959}
+.connected-card input:focus,.connected-card select:focus{border-color:#a0d6ef;outline:0}
+.connected-card a{color:#2f86c9;font-weight:700}
+.eyebrow,.session-title{display:inline-block;align-self:flex-start;padding:2px 14px;border-radius:999px;background:#e6f7ff;color:#2f86c9!important;font-weight:700}
+.connected-card .notice,.memory{background:#fee9bc;color:#595959;border-radius:18px}
+.heard-transcript{background:#ebfce6;border-radius:18px}.heard-transcript p{color:#595959}
+.heard-transcript .eyebrow{background:#d1f8c6;color:#3e9a44!important}
+.connected-card .finish{border-top:2px dotted #cacaca;border-radius:0;color:#787878}
+.account-details{border-top:2px dotted #cacaca;color:#787878}
+.speech-controls{background:#fffbec;border-top:2px dotted #cacaca}
+.mic-status{color:#787878;font-weight:500}.status-dot{width:9px;height:9px;background:#c1c1c1}
+.connected-card .mic-button{background:#fdbc67;border-color:#fdbc67;color:#4a4a4a;border-radius:999px;font-weight:700}
+.connected-card .mic-button:disabled{background:#f2f2f2;border-color:#eeeeee;color:#7d7d7d}
+.speech-controls[data-recording="true"] .mic-button{background:#2f86c9;border-color:#2f86c9;color:#fff}
+.speech-controls[data-recording="true"] .status-dot{background:#78c77c;box-shadow:0 0 0 4px #d1f8c6}
+.speech-controls[data-recording="true"] .mic-status{color:#3e9a44}
+.connected-card .mic-help{color:#787878}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline-color:#2f86c9}
