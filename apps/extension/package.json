@@ -10,6 +10,8 @@
     "test:frame": "node --test verify/frame-startup.test.mjs"
   },
   "dependencies": {
+    "@fontsource/jua": "^5.3.0",
+    "@fontsource/open-sans": "^5.3.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "react": "^18.3.1",

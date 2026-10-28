@@ -43,7 +43,7 @@ export default function Launcher({settings=false}: {settings?: boolean}) {
     </form>:<>
     {settings?<><h1>MEMFLIX 환경설정</h1><DialogueSettings/></>:<>
     <div className="pet-portrait"><PetFace petName="두리" size={92}/><span className="pet-dot" aria-hidden="true"/></div>
-    <h1>영상 볼 때, 같이 있어요.</h1>
+    <h1><em className="hl">영상 볼 때,</em> 같이 있어요.</h1>
     <p className="intro">YouTube에 들어가면<br/>두리가 영상 옆으로 찾아갈게요.</p></>}
     <div className="launcher-actions">
       {ready&&!auth&&<button className="primary" onClick={()=>{setLoginOpen(true);setMessage('');}}>로그인하고 함께 보기</button>}

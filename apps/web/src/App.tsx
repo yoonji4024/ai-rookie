@@ -7,7 +7,13 @@ import WelcomeConversation from './components/WelcomeConversation';
 import {rememberVideo} from './lib/randomVideo';
 import {currentAccount,logout,startWatch,type Account,type WatchPlan} from './lib/portalApi';
 import {localVideoSource} from './lib/localVideo';
+import '@fontsource-variable/noto-sans-kr';
+import '@fontsource/jua/400.css';
+import '@fontsource/open-sans/300.css';
+import '@fontsource/open-sans/600.css';
+import '@fontsource/open-sans/700.css';
 import './theme.css';
+import './design-guide.css';
 export default function App(){
  const [welcomeDone,setWelcomeDone]=useState(false);
  const [account,setAccount]=useState<Account|null>(null),[loading,setLoading]=useState(true),[plan,setPlan]=useState<WatchPlan|null>(null),[error,setError]=useState(''),[starting,setStarting]=useState(false);
