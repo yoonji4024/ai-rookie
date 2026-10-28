@@ -1,0 +1,249 @@
+/*
+ * MEMFLIX design layer — "정말 쉬운 디지털 교육" leaflet guide (2026-10-28)
+ * - Background split in half: deep apricot top / light apricot bottom
+ * - Big white sheet with a thick light-gray bezel (smartphone motif)
+ * - Number colors: 1 apricot, 2 sky, 3 green, 4 yellow/gray; each with deep + light tone
+ * - Text only in grays (no black), Jua rounded display titles, weights 500+
+ * - Labels in white pills with gray rims, lists in pills/tags, dotted separators
+ * Loaded after theme.css; theme.css keeps layout, this file applies the guide.
+ */
+:root{
+  /* number colors: fill / light / lightest / ink (ink = darker shade for readable text) */
+  --l-apricot:#fdbc67;--l-apricot-2:#ffeabd;--l-apricot-3:#fffbec;--l-apricot-ink:#c26f00;--l-amber:#ffb109;
+  --l-sky:#a0d6ef;--l-sky-2:#d1eefb;--l-sky-3:#e6f7ff;--l-sky-ink:#2f86c9;
+  --l-green:#78c77c;--l-green-2:#d1f8c6;--l-green-3:#ebfce6;--l-green-ink:#3e9a44;
+  --l-yellow:#ffe19f;--l-yellow-3:#fff3d6;
+  --l-gray-badge:#c1c1c1;
+  --l-bg-top:#ffbe68;--l-bg-bottom:#fee8bb;
+  --l-cover-top:#fffbec;--l-cover-bottom:#fee9bc;
+  --l-paper:#fdfdfd;--l-pill:#fafafa;
+  --l-bezel:#f2f2f2;--l-band:#e4e4e4;--l-head:#eeeeee;--l-dot:#cacaca;
+  /* text grays (no black) */
+  --l-t1:#595959;--l-t2:#6d6d6d;--l-t3:#787878;--l-t4:#7d7d7d;
+  --l-display:'Jua','Noto Sans KR Variable','Noto Sans KR',sans-serif;
+  --l-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23ffbe68'/%3E%3Cpath d='M7 12.5l3.2 3.2L17 9' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  /* retint theme.css tokens */
+  --ee-wine:var(--l-apricot-ink);--ee-wine-hover:#a65f00;--ee-rose:var(--l-apricot-3);--ee-cream:var(--l-apricot-3);
+  --ee-paper:var(--l-paper);--ee-ink:var(--l-t1);--ee-muted:var(--l-t3);--ee-line:var(--l-band);--ee-focus:var(--l-sky-ink);
+  background:var(--l-bg-bottom);
+}
+html,body{background:linear-gradient(var(--l-bg-top) 0 50vh,var(--l-bg-bottom) 50vh) fixed}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline-color:var(--l-sky-ink)}
+
+/* ---------- Sheet: white screen inside a thick gray bezel ---------- */
+.ee-app{
+  margin:clamp(10px,1.6vw,20px);
+  min-height:calc(100vh - 2 * clamp(10px,1.6vw,20px));
+  background:var(--l-paper);
+  border:clamp(8px,1vw,14px) solid var(--l-bezel);
+  border-radius:clamp(18px,2vw,28px);
+  color:var(--l-t2);font-size:17px;font-weight:500;line-height:1.6;
+}
+.ee-app strong,.ee-app b,.ee-app h1,.ee-app h2,.ee-app h3,.ee-app label,.ee-app legend{font-weight:700}
+.ee-app h1,.ee-app h2,.ee-app h3{color:var(--l-t1)}
+.ee-en{display:none}
+
+/* ---------- Header: brand inside a white pill label ---------- */
+.ee-header{position:relative;max-width:none;height:96px;padding:0 clamp(18px,3vw,44px);border-bottom:2px dotted var(--l-dot)}
+.ee-header>:last-child{margin-left:auto}
+.ee-header .ee-brand,.ee-login-story>.ee-brand{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  padding:8px 34px;background:var(--l-pill);border:2px solid var(--l-head);border-radius:999px;
+  box-shadow:0 2px 4px #0000000f;
+  font-family:var(--l-display);font-weight:400;font-size:22px;letter-spacing:.06em;color:var(--l-t1);
+}
+.ee-header .ee-brand::before,.ee-login-story>.ee-brand::before{content:"";width:14px;height:14px;margin-right:8px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--l-amber)}
+.ee-welcome,.ee-family-heading,.ee-watch-title{color:var(--l-t3);font-size:16px;font-weight:500}
+.ee-header-actions{gap:8px}
+.ee-header-actions button{padding:10px 20px;border-radius:999px;border:2px solid var(--l-head);background:#fff;color:var(--l-t1);font-weight:700}
+.ee-header-actions button:hover{background:var(--l-pill)}
+
+/* ---------- Type ---------- */
+.ee-hl{font-style:normal;color:var(--l-sky-ink)}
+.ee-hero h1,.ee-section-heading h1,.ee-section-heading h2,.ee-login-story h1,.ee-login-form h2,.ee-hello-card h1,.ee-watch-finish h2,.ee-modal-header h2,.ee-family-report>h2{font-family:var(--l-display);font-weight:400;letter-spacing:0;color:var(--l-t1)}
+.ee-eyebrow{font-size:14px;font-weight:700;letter-spacing:0;color:var(--l-apricot-ink)}
+.ee-muted{color:var(--l-t3)}
+.ee-text-button{color:var(--l-t2);font-weight:700;text-decoration-style:dotted;text-decoration-color:var(--l-dot)}
+/* Check pills (leaflet "이런 분께 추천드려요") */
+.ee-random-hint,.ee-report-notice,.ee-hello-privacy{position:relative;display:block;background:var(--l-cover-bottom);color:var(--l-t1)!important;border-radius:999px;padding:10px 20px 10px 48px!important;font-weight:500}
+.ee-random-hint::before,.ee-report-notice::before,.ee-hello-privacy::before{content:"";position:absolute;left:14px;top:50%;width:24px;height:24px;transform:translateY(-50%);background:var(--l-check) center/contain no-repeat}
+.ee-report-notice{border-radius:20px}
+
+/* ---------- Buttons ---------- */
+.ee-primary,.ee-secondary{border-radius:999px;padding:14px 30px;font-size:16px;font-weight:700;gap:12px;min-height:52px}
+.ee-primary{background:var(--l-apricot);border:0;color:#4a4a4a}
+.ee-primary:hover:not(:disabled){background:#f9ad4a}
+.ee-secondary{background:#fff;border:2px solid var(--l-head);color:var(--l-t1)}
+.ee-secondary:hover{background:var(--l-pill)}
+.ee-close{border:2px solid var(--l-head);color:var(--l-t1)}
+
+/* ---------- Library ---------- */
+.ee-main{max-width:1240px}
+.ee-hero{background:var(--l-apricot-3);border:0;border-radius:24px;margin:28px 0 56px}
+.ee-hero h1{font-size:clamp(34px,3.4vw,50px);line-height:1.3;margin:0 0 20px}
+.ee-hero-copy p{color:var(--l-t2);font-size:17px}
+.ee-hero-copy .ee-random-hint{display:inline-block;max-width:100%;margin-top:18px}
+.ee-orbit{border-color:var(--l-sky);border-style:dashed}
+.ee-orbit::before{border-color:var(--l-green-2)}
+.ee-art-screen{border:12px solid var(--l-head);border-radius:24px;box-shadow:0 12px 30px #0000001a}
+.ee-scenery{background:var(--l-sky-3)}
+.ee-sun{background:var(--l-amber)}
+.ee-hill{background:var(--l-green)}
+.hill-two{background:var(--l-sky)}
+.ee-chat-float{background:#fff;color:var(--l-green-ink);border:3px solid var(--l-green);font-weight:700}
+.ee-sound-float i{background:var(--l-sky)}
+.ee-play,.ee-card-play{background:#fff;color:var(--l-apricot-ink)}
+.ee-screen-foot div{background:linear-gradient(to right,var(--l-apricot) 35%,var(--l-head) 35%)}
+
+.ee-library .ee-section-heading{flex-direction:column;align-items:center;text-align:center;gap:22px;padding-bottom:28px;border-bottom:2px dotted var(--l-dot)}
+.ee-section-heading h1,.ee-section-heading h2{font-size:clamp(30px,2.8vw,42px);line-height:1.3;margin:0}
+.ee-search{width:min(460px,100%);border:2px solid var(--l-head);border-radius:999px;padding:8px 20px;background:#fff}
+.ee-search>span{color:var(--l-apricot-ink)}
+.ee-toolbar{justify-content:center;margin:26px 0 30px}
+.ee-filters button{border:2px solid var(--l-head);border-radius:999px;background:#fff;color:var(--l-t1);font-weight:700;padding:9px 26px}
+.ee-filters button.active{background:var(--l-apricot);border-color:var(--l-apricot);color:#4a4a4a}
+.ee-grid{gap:26px 22px}
+.ee-video-card{background:#fff;border:8px solid var(--l-bezel);border-radius:24px}
+.ee-video-card:hover{box-shadow:0 10px 24px #00000012}
+.ee-thumbnail{border-radius:14px 14px 0 0}
+.ee-card-0 .ee-thumbnail{background:var(--l-apricot-2)}
+.ee-card-1 .ee-thumbnail{background:var(--l-sky-2)}
+.ee-card-2 .ee-thumbnail{background:var(--l-green-2)}
+.ee-card-3 .ee-thumbnail{background:var(--l-yellow)}
+.ee-thumb-shade{background:none}
+.ee-category-tag{border:0;border-radius:999px;padding:4px 14px;font-size:13px;font-weight:700;backdrop-filter:none;background:var(--l-green-3);color:var(--l-green-ink)}
+.ee-category-tag[data-cat="news"]{background:var(--l-sky-3);color:var(--l-sky-ink)}
+.ee-thumbnail-count{background:var(--l-apricot);color:#4a4a4a;font-weight:700;border-radius:999px;padding:3px 12px}
+.ee-card-body{padding:18px 18px 20px}
+.ee-app .ee-publisher{color:var(--l-t3);font-weight:700}
+.ee-app .ee-title-button h3{color:var(--l-t1);font-weight:700}
+.ee-footer{border-top:2px dotted var(--l-dot);padding-top:24px;margin-top:20px}
+.ee-footer .ee-brand{font-family:var(--l-display);font-weight:400;color:var(--l-t1)}
+.ee-footer>span{color:var(--l-t3)}
+.ee-empty{border:2px dashed var(--l-dot);background:var(--l-apricot-3)}
+
+/* ---------- Modal: phone-like screen ---------- */
+.ee-modal-backdrop{background:#59595980}
+.ee-modal{background:var(--l-paper);border:12px solid var(--l-head);border-radius:30px;box-shadow:0 20px 70px #00000030}
+.ee-modal>p{color:var(--l-t2)}
+/* Number colors for segments: 1 apricot, 2 sky, 3 green, 4 yellow */
+.ee-segments button{border:0;border-radius:18px;background:var(--l-apricot-3);color:var(--l-t1)}
+.ee-segments button:nth-child(4n+2){background:var(--l-sky-3)}
+.ee-segments button:nth-child(4n+3){background:var(--l-green-3)}
+.ee-segments button:nth-child(4n){background:var(--l-yellow-3)}
+.ee-segments button strong{color:var(--l-apricot-ink)}
+.ee-segments button:nth-child(4n+2) strong{color:var(--l-sky-ink)}
+.ee-segments button:nth-child(4n+3) strong{color:var(--l-green-ink)}
+.ee-segments .active{box-shadow:inset 0 0 0 3px var(--l-apricot)!important}
+.ee-segments .active:nth-child(4n+2){box-shadow:inset 0 0 0 3px var(--l-sky)!important}
+.ee-segments .active:nth-child(4n+3){box-shadow:inset 0 0 0 3px var(--l-green)!important}
+.ee-segments small{color:var(--l-t3)}
+.ee-connection-code{background:var(--l-apricot-3);border:2px dotted var(--l-apricot);border-radius:20px}
+.ee-connection-code strong{font-family:var(--l-display);font-weight:400;color:var(--l-apricot-ink)}
+.ee-linked-member{border-bottom:2px dotted var(--l-dot)}
+
+/* ---------- Login = leaflet cover: half-split cream/apricot, phone-shaped cover ---------- */
+.ee-login{position:relative;box-sizing:border-box;gap:clamp(16px,2.4vw,32px);padding:clamp(14px,2.4vw,32px);background:linear-gradient(var(--l-cover-top) 0 50%,var(--l-cover-bottom) 50%)}
+.ee-login *{box-sizing:border-box}
+.ee-login-story{position:relative;background:var(--l-paper);border:14px solid var(--l-head);border-radius:30px;box-shadow:0 0 0 16px var(--l-apricot);margin:16px;padding-top:120px}
+.ee-login-story::after{content:"";position:absolute;top:-30px;right:34px;width:64px;height:12px;background:radial-gradient(circle,#fff 0 3px,transparent 3.5px) 0 0/16px 12px repeat-x}
+.ee-login-story>.ee-brand{top:56px}
+.ee-login-story h1{font-size:clamp(34px,3.6vw,54px);line-height:1.28;margin:0 0 22px}
+.ee-login-story p{color:var(--l-t2);font-weight:500}
+.ee-login-art{background:var(--l-apricot);color:#fff;transform:none;border-radius:999px;box-shadow:none;margin-top:36px;padding:14px 28px 14px 14px}
+.ee-login-art .ee-duri{background:var(--l-sky-3);border-radius:50%;padding:8px;width:clamp(90px,8vw,120px)}
+.ee-login-art-quote{font-weight:700;font-size:18px}
+.ee-login-form{background:var(--l-paper);border-radius:22px;align-self:center;margin:16px 0}
+.ee-login-form h2{font-size:clamp(28px,2.4vw,36px);line-height:1.3;margin:0 0 10px}
+.ee-login-form form>p{color:var(--l-t3)}
+.ee-login-form label,.ee-login-form legend{color:var(--l-t1)}
+.ee-login-form form>input,.ee-family-link input,.ee-family-signup input,.ee-active-question textarea{border:2px solid var(--l-head);border-radius:14px;background:#fff;color:var(--l-t1);font-weight:500}
+.ee-login-form form>input:focus,.ee-family-link input:focus,.ee-family-signup input:focus{border-color:var(--l-sky);outline:0;box-shadow:0 0 0 3px var(--l-sky-3)}
+.ee-role-options label{border:0;border-radius:18px;background:var(--l-apricot-3)}
+.ee-role-options label:nth-child(2){background:var(--l-sky-3)}
+.ee-role-options label.active{box-shadow:inset 0 0 0 3px var(--l-apricot)}
+.ee-role-options label:nth-child(2).active{box-shadow:inset 0 0 0 3px var(--l-sky)}
+.ee-role-options input{accent-color:var(--l-apricot-ink)}
+.ee-login-form .ee-family-signup{background:var(--l-green-3);border:0;border-radius:20px}
+.ee-form-error{border-radius:14px}
+
+/* ---------- Welcome conversation: the card is a phone screen ---------- */
+.ee-hello>.ee-hello-greeting{color:var(--l-t1);font-family:var(--l-display);font-weight:400;font-size:26px}
+.ee-hello-greeting strong{color:var(--l-sky-ink);font-weight:400;font-size:30px}
+.ee-hello-card{background:#fff;border:14px solid var(--l-head);border-radius:34px;box-shadow:0 0 0 14px var(--l-apricot),0 18px 40px #00000018;margin:14px}
+.ee-hello-card h1{font-size:clamp(28px,2.4vw,36px);line-height:1.4}
+.ee-hello-card p{color:var(--l-t2)}
+.ee-hello-mark,.ee-wait-icon,.ee-complete-mark{background:var(--l-apricot);color:#fff;border-radius:50%;box-shadow:0 0 0 8px var(--l-apricot-2)}
+.ee-hello-dots i{width:14px;height:14px;background:var(--l-head)}
+.ee-hello-dots i.active{width:14px;border-radius:50%;background:var(--l-apricot);box-shadow:0 0 0 5px var(--l-apricot-2)}
+.ee-hello-dots i:nth-child(2).active{background:var(--l-sky);box-shadow:0 0 0 5px var(--l-sky-2)}
+
+/* ---------- Family space ---------- */
+.ee-family-main{max-width:1240px}
+.ee-family-main>.ee-section-heading{flex-direction:column;align-items:center;text-align:center;padding-bottom:26px;border-bottom:2px dotted var(--l-dot)}
+.ee-family-main h1{margin:0}
+.ee-family-main>.ee-section-heading .ee-muted{margin-top:12px;font-size:16px}
+/* Card titles sit in white pill labels with gray rims (leaflet section labels). */
+.ee-family-link,.ee-history,.ee-welcome-history,.ee-family-report{border:8px solid var(--l-bezel);border-radius:24px;background:#fff}
+.ee-family-link{align-items:flex-start;background:var(--l-green-3);border-color:#fff;box-shadow:0 0 0 2px var(--l-green-2)}
+.ee-family-link h2,.ee-history>h2,.ee-welcome-history>h2{display:inline-block;padding:6px 24px;background:var(--l-pill);border:2px solid var(--l-head);border-radius:999px;box-shadow:0 2px 4px #0000000f;font-family:var(--l-display);font-weight:400;font-size:20px;color:var(--l-t1)}
+.ee-family-link p{color:var(--l-t2)}
+.ee-family-link-fields label{color:var(--l-t1)}
+.ee-family-tabs{justify-content:center}
+.ee-family-tabs button{border:2px solid var(--l-head);border-radius:999px;background:#fff;color:var(--l-t1);font-weight:700;padding:12px 28px}
+.ee-family-tabs .active{background:var(--l-apricot);border-color:var(--l-apricot);color:#4a4a4a}
+.ee-welcome-history details{border-top:2px dotted var(--l-dot)}
+.ee-welcome-history summary{color:var(--l-t1)}
+.ee-history button{border:0;border-radius:16px;background:var(--l-pill)}
+.ee-history button.active{background:var(--l-apricot-2);box-shadow:inset 0 0 0 2px var(--l-apricot)}
+.ee-history strong{color:var(--l-t1)}
+.ee-history small{color:var(--l-t3)}
+.ee-family-report>h2{font-size:clamp(26px,2.2vw,32px)}
+/* Section subtitles follow number colors: 1st apricot, 2nd sky. */
+.ee-family-report h3{font-family:var(--l-display);font-weight:400;font-size:22px;color:var(--l-apricot-ink)}
+.ee-family-report h3~h3{color:var(--l-sky-ink)}
+/* Leaflet table: no lines, white gaps, deep pastel label + light pastel value per row. */
+.ee-factor-grid{gap:4px}
+.ee-factor{border:0;border-radius:0;padding:0;align-items:stretch;gap:0;font-size:15px;color:var(--l-t3);overflow:hidden;background:var(--l-apricot-3)}
+.ee-factor>span{flex:0 0 46%;display:flex;align-items:center;justify-content:center;padding:14px 10px;background:var(--l-apricot-2);color:var(--l-t1);font-weight:700;text-align:center}
+.ee-factor>strong{flex:1;display:flex;align-items:center;justify-content:center;padding:14px 10px;font-size:20px;color:var(--l-t1)}
+.ee-factor:nth-child(4n+2){background:var(--l-sky-3)}.ee-factor:nth-child(4n+2)>span{background:var(--l-sky-2)}
+.ee-factor:nth-child(4n+3){background:var(--l-green-3)}.ee-factor:nth-child(4n+3)>span{background:var(--l-green-2)}
+.ee-factor:nth-child(4n){background:var(--l-yellow-3)}.ee-factor:nth-child(4n)>span{background:var(--l-yellow)}
+.ee-factor-grid>.ee-factor:first-child{border-top-left-radius:14px}
+.ee-factor-grid>.ee-factor:nth-child(2){border-top-right-radius:14px}
+.ee-factor-grid>.ee-factor:nth-last-child(2){border-bottom-left-radius:14px}
+.ee-factor-grid>.ee-factor:last-child{border-bottom-right-radius:14px}
+.ee-factor strong.ee-na{font-size:15px;color:var(--l-t4)}
+.ee-saved-conversation{border-top:2px dotted var(--l-dot)}
+.ee-saved-prompt{color:var(--l-sky-ink)!important;font-weight:700}
+.ee-saved-conversation p:not(.ee-saved-prompt){color:var(--l-t1)}
+
+/* ---------- Watch together ---------- */
+.ee-player-host,.ee-live-player{border:12px solid var(--l-head);border-radius:28px;background:#595959}
+.ee-small-dot{background:var(--l-green)}
+.ee-spoken-card{position:relative;background:#fff;border:8px solid var(--l-bezel);border-radius:24px;box-shadow:none;padding-top:62px}
+.ee-spoken-card::before{content:"두리의 이야기";position:absolute;top:14px;left:50%;transform:translateX(-50%);padding:4px 22px;background:var(--l-pill);border:2px solid var(--l-head);border-radius:999px;font-family:var(--l-display);font-size:17px;color:var(--l-t1)}
+.ee-spoken-avatar{background:var(--l-sky-3);border-radius:50%}
+.ee-spoken-prompt{color:var(--l-t1);font-weight:700}
+.ee-spoken-reply{color:var(--l-green-ink);font-weight:700}
+.ee-watch-message{background:var(--l-apricot-3);border-radius:20px}
+.ee-watch-finish{background:#fdfdfdf0;border:12px solid var(--l-head);border-radius:28px}
+.ee-watch-finish h2{font-size:clamp(26px,2.6vw,36px)}
+.ee-watch-footnote{color:var(--l-t3)}
+.ee-loading{background:transparent;color:var(--l-t1);font-family:var(--l-display);font-size:22px}
+
+@media (max-width:760px){
+  .ee-header{height:auto;padding-top:78px;padding-bottom:14px}
+  .ee-header .ee-brand{top:38px;font-size:19px;padding:6px 26px}
+  .ee-hero{margin:14px 0 40px}
+  .ee-video-card{border-width:5px;border-radius:18px}
+  .ee-category-tag{top:8px;left:8px;padding:2px 10px;font-size:11px}
+  .ee-card-play{width:32px;height:32px}
+}
+@media (max-width:650px){
+  .ee-login-story{margin:14px 14px 0;border-width:10px;box-shadow:0 0 0 12px var(--l-apricot);padding-top:96px}
+  .ee-login-story>.ee-brand{top:44px}
+  .ee-hello-card{margin:10px 6px;border-width:10px;box-shadow:0 0 0 10px var(--l-apricot)}
+  .ee-factor>span{flex-basis:50%}
+}

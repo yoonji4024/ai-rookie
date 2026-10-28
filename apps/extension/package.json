@@ -1,0 +1,29 @@
+{
+  "name": "memflix-extension",
+  "private": true,
+  "version": "0.3.9",
+  "type": "module",
+  "scripts": {
+    "typecheck:ext": "tsc -p tsconfig.ext.json --noEmit",
+    "build:ext": "npm run typecheck:ext && vite build -c vite.config.extension.ts && node scripts/check-ext.mjs",
+    "test": "node --test --experimental-strip-types src/shared/__tests__/*.test.ts extension/src/content/*.test.ts extension/src/pet/*.test.ts",
+    "test:frame": "node --test verify/frame-startup.test.mjs"
+  },
+  "dependencies": {
+    "@fontsource/jua": "^5.3.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.7.1",
+    "@types/chrome": "^0.2.9",
+    "@types/node": "^26.1.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "typescript": "^5.5.4",
+    "vite": "^8.1.4"
+  }
+}

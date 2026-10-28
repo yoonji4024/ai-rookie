@@ -1,0 +1,1972 @@
+{
+  "version": "2026-10-06.1",
+  "provenance": "User-provided team question list, 2026-10-06. Original videos not independently verified.",
+  "videos": [
+    {
+      "id": "lnvaFy7cRmk",
+      "youtubeId": "lnvaFy7cRmk",
+      "title": "섬마을에 찾아온 손님",
+      "category": "entertainment",
+      "publisher": "예능 · 팀 선정",
+      "sourceUrl": "https://www.youtube.com/watch?v=lnvaFy7cRmk",
+      "sourceStatus": "not_independently_verified",
+      "notes": [
+        "표시 제목은 질문 내용으로 붙인 탐색용 제목입니다.",
+        "개별 질문 시점은 미제공입니다. 각 구간이 끝나면 원래 문항 순서대로 질문합니다."
+      ],
+      "segments": [
+        {
+          "id": "s1",
+          "label": "1세션",
+          "start": 60,
+          "end": 420
+        },
+        {
+          "id": "s2",
+          "label": "2세션",
+          "start": 600,
+          "end": 900
+        },
+        {
+          "id": "s3",
+          "label": "3세션",
+          "start": 1680,
+          "end": 1920
+        },
+        {
+          "id": "s4",
+          "label": "4세션",
+          "start": 3180,
+          "end": 3480
+        }
+      ],
+      "questions": [
+        {
+          "id": "lnvaFy7cRmk-q1",
+          "number": 1,
+          "segmentId": "s1",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "새로 찾아온 여성 손님(게스트)은 누구인가요?",
+          "answer": "한지민",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q2",
+          "number": 2,
+          "segmentId": "s1",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "출연진이 머물고 있는 장소는 어디인가요?",
+          "answer": "바닷가 / 섬 마을",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q3",
+          "number": 3,
+          "segmentId": "s1",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "우유를 넣기 위해 이야기한 가전제품은 무엇인가요?",
+          "answer": "냉장고",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q4",
+          "number": 4,
+          "segmentId": "s2",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "손님이 직접 챙겨온 반찬 중 기억나는 것은 무엇인가요?",
+          "answer": "더덕무침, 파김치, 오이지 등",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q5",
+          "number": 5,
+          "segmentId": "s2",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "저녁으로 구워 먹으려고 준비한 고기 부위는 무엇인가요?",
+          "answer": "삼겹살",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q6",
+          "number": 6,
+          "segmentId": "s2",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "고기를 준비할 때 몇 명이 먹을 분량이라고 했나요?",
+          "answer": "3명",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q7",
+          "number": 7,
+          "segmentId": "s3",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "바다목장에 방문했을 때 있던 동물의 종류는 무엇인가요?",
+          "answer": "염소(또는 흑염소)",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q8",
+          "number": 8,
+          "segmentId": "s3",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "염소들에게 준 먹이는 무엇인가요?",
+          "answer": "건초(풀)",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q9",
+          "number": 9,
+          "segmentId": "s3",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "청소할 때 나온 염소 똥의 크기를 비유한 음식 재료는 무엇인가요?",
+          "answer": "콩자반(또는 콩), 초콜릿, 카카오",
+          "rubric": "",
+          "reviewNotes": [
+            "서로 다른 비유의 허용 범위를 원영상에서 확인해 주세요."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q10",
+          "number": 10,
+          "segmentId": "s4",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "빙수를 만들 때 사용한 주된 재료 두 가지는 무엇인가요?",
+          "answer": "우유, 연유, 팥, 토마토",
+          "rubric": "",
+          "reviewNotes": [
+            "두 가지를 묻지만 후보는 네 가지입니다. 필요한 답의 개수를 확정해 주세요."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "lnvaFy7cRmk-q11",
+          "number": 11,
+          "segmentId": "s4",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "얼린 우유를 어떤 도구(기계)로 갈았나요?",
+          "answer": "믹서기",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "Red9x6ZmeyM",
+      "youtubeId": "Red9x6ZmeyM",
+      "title": "운동부터 이사, 시장 나들이까지",
+      "category": "entertainment",
+      "publisher": "예능 · 팀 선정",
+      "sourceUrl": "https://www.youtube.com/watch?v=Red9x6ZmeyM",
+      "sourceStatus": "not_independently_verified",
+      "notes": [
+        "표시 제목은 질문 내용으로 붙인 탐색용 제목입니다.",
+        "개별 질문 시점은 미제공입니다. 각 구간 종료 후 질문합니다."
+      ],
+      "segments": [
+        {
+          "id": "s1",
+          "label": "1세션",
+          "start": 0,
+          "end": 540
+        },
+        {
+          "id": "s2",
+          "label": "2세션",
+          "start": 1080,
+          "end": 1680
+        },
+        {
+          "id": "s3",
+          "label": "3세션",
+          "start": 2220,
+          "end": 2580
+        },
+        {
+          "id": "s4",
+          "label": "4세션",
+          "start": 3180,
+          "end": 4080
+        }
+      ],
+      "questions": [
+        {
+          "id": "Red9x6ZmeyM-q1",
+          "number": 1,
+          "segmentId": "s1",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "운동을 시작할 때, 인물이 부상을 입었다며 보여준 얼굴 부위는 어디인가요?",
+          "answer": "코",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q2",
+          "number": 2,
+          "segmentId": "s1",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "온몸을 흔들며 물결 모양을 만들던 두꺼운 운동 도구의 이름은 무엇인가요?",
+          "answer": "로프 / 밧줄",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q3",
+          "number": 3,
+          "segmentId": "s2",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "두 사람은 몇 층에서 몇 층으로 이사를 가고 있나요?",
+          "answer": "4층에서 5층으로",
+          "rubric": "",
+          "reviewNotes": [
+            "출발 층과 도착 층의 방향을 함께 확인해야 합니다."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q4",
+          "number": 4,
+          "segmentId": "s2",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "계단과 문턱을 넘으며 가장 힘들게 옮긴 새 가전제품은 무엇인가요?",
+          "answer": "냉장고(대형 냉장고)",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q5",
+          "number": 5,
+          "segmentId": "s2",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "냉장고를 옮기다가 문틀이나 방 안에서 걸렸을 때, 냉장고의 방향에 어떤 문제가 생겼나요?",
+          "answer": "세로 방향으로 거꾸로 뒤집어짐",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q6",
+          "number": 6,
+          "segmentId": "s3",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "시장에 도착해서 가장 먼저 사 먹은 갓 나온 뜨거운 간식은 무엇인가요?",
+          "answer": "만두와 꽈배기",
+          "rubric": "",
+          "reviewNotes": [
+            "두 음식 중 하나만 답했을 때의 기준은 미제공입니다."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q7",
+          "number": 7,
+          "segmentId": "s3",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "김장을 하기 위해 야채 가게에서 구입한 채소는 무엇인가요?",
+          "answer": "무, 부추, 청양고추, 쪽파",
+          "rubric": "",
+          "reviewNotes": [
+            "필요한 답의 개수는 미제공입니다. 원문 답안의 '쪽파ㄱ'을 '쪽파'로 정리했습니다."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q8",
+          "number": 8,
+          "segmentId": "s4",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "산책을 함께 나선 흰색 반려동물은 무엇인가요?",
+          "answer": "강아지(꽃분이)",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q9",
+          "number": 9,
+          "segmentId": "s4",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "씻고 난 뒤 얼굴에 하얗게 바르고 나온 것은 무엇인가요?",
+          "answer": "로션",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "Red9x6ZmeyM-q10",
+          "number": 10,
+          "segmentId": "s4",
+          "timestamp": null,
+          "delivery": "after_segment",
+          "kind": "recall",
+          "question": "공원 벤치에 앉아서 집에서 가져온 ‘자연식’이라고 이야기한 음식은 무엇인가요?",
+          "answer": "햄버거",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "a2GT6K5yzAY",
+      "youtubeId": "a2GT6K5yzAY",
+      "title": "69년 만에 아시아 최고 성적…새 역사 쓴 '샛별' 황선우",
+      "category": "news",
+      "publisher": "SBS",
+      "sourceUrl": "https://www.youtube.com/watch?v=a2GT6K5yzAY",
+      "sourceStatus": "not_independently_verified",
+      "notes": [],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "a2GT6K5yzAY-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 0,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "뉴스에서 황선우 선수가 5위를 했다고 하는데, 방금 이 소식 들으시니 어떤 마음이 드세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 19,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "결승에서 황선우 선수가 6번 레인에서 경기했다는데 몇번째로 물속에 들어간거 같아요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "레인 번호와 입수 순서는 다른 정보입니다. 문항 수정이 필요합니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 33,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "전반 50m는 6위였는데 후반에 사력을 다했다고 하네요, 어르신도 마지막에 힘을 쏟아부었던 경험이 있으세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 46,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "1952년 이후 몇년 만에 아시아 최고 기록이라고 했나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 63,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "닷새 동안 쉬지 않고 경기를 뛰었다고 하는데, 저렇게 연달아 뛰는 게 얼마나 힘든 일일 것 같으세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 71,
+          "delivery": "at_time",
+          "kind": "mixed",
+          "question": "기자가 3년 후 다음 올림픽에서 메달을 딸 수 있을 거라고 전망했는데, 어르신도 그렇게 생각하세요? 다음 올림픽은 어느 나라에서 개최되나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "감상과 사실 질문이 함께 있습니다.",
+            "'다음 올림픽'은 현재가 아닌 방송 당시 기준입니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 87,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "오늘 저녁에 자유형 50m도 또 나간다고 하는데, 저 선수 응원하고 싶다는 마음이 드세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 0,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "지금 코로나 때문에 관중 없이 올림픽을 하고 있는데, 전염병때문에 올림픽을 관중 없이 한 것은 처음이지요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "방송 당시 상황과 '처음'이라는 전제의 확인이 필요합니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 46,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "올림픽 하면 어르신 기억 속에 가장 기쁘셨던 순간이 언제였나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "a2GT6K5yzAY-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 71,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "살면서 '저 사람 앞으로 크게 될 것 같다'는 생각이 든 사람이 있으셨나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "d7QOXkzc0QA",
+      "youtubeId": "d7QOXkzc0QA",
+      "title": "판잔러 옆 레인 배치된 황선우 '5년 전 도쿄 기분 그대로!'",
+      "category": "news",
+      "publisher": "MBC · 2026.09.19",
+      "sourceUrl": "https://www.youtube.com/watch?v=d7QOXkzc0QA",
+      "sourceStatus": "not_independently_verified",
+      "notes": [
+        "개인 경험·감상 질문이며 정답률을 산출하지 않습니다. 방송 날짜와 장소 등 전제는 원영상 확인 전입니다."
+      ],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "d7QOXkzc0QA-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 0,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "이번 아시안게임 수영 경기하는 곳이 5년 전 올림픽 때랑 같은 곳이라고 하네요. 5년전에 경기 봤던거 기억나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 7,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "\"5년 전 도쿄 기분 그대로\"라는 말을 들으니 어떤 느낌이 드세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 14,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "황선우가 5번 레인, 바로 옆에 중국 선수가 4번 레인이라고 하는데, 강한 상대 옆에 서게 되면 어떤 마음일 것 같으세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 20,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "세계신기록 보유자랑 나란히 경쟁한다고 하는데, 어르신은 그런 상황에서 주눅이 들 것 같으세요 아니면 더 신이 날 것 같으세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 22,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "이번 아시안게임이 5년 전 올림픽 장소에서 열린다는 게 황선우 선수한테 어떤 의미일 것 같으세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 25,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "아시안게임 수영 경기, 어르신은 응원하실 생각이 있으세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 30,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "이 짧은 영상 하나를 보고 경기가 궁금해지셨나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 0,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "5년 전에 황선우 선수가 올림픽 결승까지 갔던 거 기억하세요? 그때 뉴스 보셨나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 7,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "5년 전 도쿄 올림픽 때 코로나로 다들 집에만 계셨을 텐데, 그 시절이 생각나시나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "d7QOXkzc0QA-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 14,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "5년이라는 시간이 어르신께는 어떻게 느껴지세요? 길게 느껴지시나요, 짧게 느껴지시나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "cFWo7iqBa-Y",
+      "youtubeId": "cFWo7iqBa-Y",
+      "title": "추석 장바구니 물가",
+      "category": "news",
+      "publisher": "KBS",
+      "sourceUrl": "https://www.youtube.com/watch?v=cFWo7iqBa-Y",
+      "sourceStatus": "not_independently_verified",
+      "notes": [],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "cFWo7iqBa-Y-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 19,
+          "delivery": "at_time",
+          "kind": "context",
+          "question": "벌써 추석이네요. 올해 추석이 며칠이었죠? 이제 얼마 안 남은 것 같은데.",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "방송 연도·날짜를 먼저 확인해야 합니다. 현재 날짜로 채점하지 않습니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 36,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "여기 시장 사람 진짜 많다. 어르신은 명절 장 보실 때 주로 어디 가세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 48,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "어, 저분은 뭐가 그렇게 많이 올랐다는 거예요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 58,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "차례상 한 번 차리는 데 저만큼이나 든대요? 얼마라고 했죠?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 72,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "선물세트 코너에 사람이 하나도 없네. 왜 저럴까요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 87,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "어르신도 명절에 선물 보내는 데 있으시죠? 세트 하나에 4천 원씩 올랐으면, 세 군데만 보내도 꽤 더 들겠는데요.",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 96,
+          "delivery": "at_time",
+          "kind": "context",
+          "question": "지난달 물가가 올랐다는데… 지난달이면 몇 월 얘기예요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "방송 날짜가 필요합니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 103,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "농수산물이 제일 많이 올랐다네요. 아까 시장에서 인터뷰한 분도 그런 얘기 하지 않았어요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 118,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "와, 오른 게 한두 개가 아니네요. 방금 나온 것 중에 기억나는 거 있으세요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "cFWo7iqBa-Y-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 128,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "뉴스 다 봤네요. 이따 따님한테 오늘 뉴스 얘기해 준다면 뭐라고 하실 거예요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "가족관계를 가정한 표현입니다. 실제 진행 시 적절한 호칭을 확인해 주세요."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "VnuBn-jdNv8",
+      "youtubeId": "VnuBn-jdNv8",
+      "title": "새우 바이러스 '실명 괴담'",
+      "category": "news",
+      "publisher": "KNN",
+      "sourceUrl": "https://www.youtube.com/watch?v=VnuBn-jdNv8",
+      "sourceStatus": "not_independently_verified",
+      "notes": [
+        "건강 관련 전제·결론의 원영상 대조가 필요합니다. 저장된 질문은 의학적 조언이 아닙니다."
+      ],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "VnuBn-jdNv8-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 20,
+          "delivery": "at_time",
+          "kind": "mixed",
+          "question": "세상에, 새우 먹고 어디가 안 좋아진다는 거예요? 어르신도 이런 얘기 들어보셨어요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 27,
+          "delivery": "at_time",
+          "kind": "context",
+          "question": "3월에 나온 연구가 이제 와서 퍼지네요. 그게 벌써 몇 달 전이죠?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "방송 날짜가 필요합니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 40,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "사람 눈에서 나왔다니 무섭네요. 이 바이러스가 원래는 어디 있던 거래요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 60,
+          "delivery": "at_time",
+          "kind": "calculation",
+          "question": "절반이 수술을 했다는데, 70명이면 그게 몇 명이나 되는 거예요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 86,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "그럼 새우는 먹으면 안 되는 거예요? 뭐가 문제라는 건지 헷갈리네요.",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "문항의 전제를 건강 조언으로 사용하지 않습니다. 원영상의 결론 확인이 필요합니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 92,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "어르신은 새우 사시면 손질 직접 하세요? 주로 어디서 사 오시고요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 97,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "새우 말고 다른 수산물에도 있다니까… 어르신은 생선이나 해산물 뭐 좋아하세요? 생각나는 대로 다 말해 주세요.",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 104,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "그럼 국산 새우는 괜찮은 거예요? 중국산만 피하면 되는 건가?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "원산지만으로 안전성을 단정하는 문항 전제를 검토해야 합니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 107,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "근데 아까 환자가 꽤 많다고 했잖아요. 몇 명이었더라?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "VnuBn-jdNv8-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 109,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "결국 새우는 어떻게 하라는 거예요? 이따 따님한테 한마디로 전해 준다면요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "Gz9kBX1zusg",
+      "youtubeId": "Gz9kBX1zusg",
+      "title": "청년 대장암 125% 증가",
+      "category": "news",
+      "publisher": "YTN",
+      "sourceUrl": "https://www.youtube.com/watch?v=Gz9kBX1zusg",
+      "sourceStatus": "not_independently_verified",
+      "notes": [
+        "방송의 위험 수치·건강 관련 전제를 대조하기 전입니다. 임상 진단이나 개인의 질병 위험을 산출하지 않습니다."
+      ],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "Gz9kBX1zusg-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 24,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "손주분들도 저런 거 자주 시켜 드세요? 요즘은 뭘 그렇게 시켜 먹는대요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 30,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "아이고, 안 좋다는 게 다 맛있는 것들이네요. 뭐뭐라고 했죠?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 43,
+          "delivery": "at_time",
+          "kind": "context",
+          "question": "2018년부터 5년 동안이면 언제까지 본 거예요? 그것도 벌써 몇 년 전이잖아요.",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [
+            "연도 포함 방식과 방송 날짜를 확인해야 합니다."
+          ],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 52,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "젊은 사람들이 그렇게 많이 늘었어요? 몇 퍼센트라고 했죠, 방금?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 55,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "채소 많이 먹으라는 말이 괜히 있는 게 아니네요. 장에 어떻게 좋다는 거예요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 63,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "젊은 사람들 채소 진짜 안 먹네요. 어르신은 하루에 얼마나 드세요? 주로 어디서 사 오시고요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 70,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "술에 담배까지 하면 더 안 좋겠네요. 아까 그 안 좋다는 음식들이 뭐였더라?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 81,
+          "delivery": "at_time",
+          "kind": "calculation",
+          "question": "두 배면 얼마나 되는 거예요? 백 명 중에 다섯 명 걸리던 게…",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 93,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "피가 보이면 놀라서 병원 갈 것 같은데 그냥 넘긴다네요. 왜 그렇대요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "Gz9kBX1zusg-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 101,
+          "delivery": "at_time",
+          "kind": "conversation",
+          "question": "이 뉴스 보고 손주분한테 딱 한마디 해 준다면 뭐라고 하실 거예요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "tbc-pending",
+      "youtubeId": null,
+      "title": "TBC 뉴스 모음",
+      "category": "news",
+      "publisher": "TBC",
+      "sourceUrl": null,
+      "sourceStatus": "not_independently_verified",
+      "notes": [
+        "영상 링크와 방송 날짜가 미제공입니다. 질문만 보존하고 재생은 대기합니다."
+      ],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "tbc-pending-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 75,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "지금 우리나라에서 빠르게 퍼지면서 곧 우세종이 될 거라는 코로나19 변이는 무엇인가요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "tbc-pending-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 135,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "오미크론이 많이 퍼진 지역부터 코로나 검사 방식이 바뀐다고 하는데, 어떻게 바뀌나요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "tbc-pending-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 140,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "서초구에 새로 문을 연 센터는 무엇을 하는 곳인가요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "tbc-pending-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 435,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "이제 서울시의 카페안에 일회용컵 사용 못하는 거에요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "tbc-pending-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 880,
+          "delivery": "at_time",
+          "kind": "context",
+          "question": "이번 올림픽은 어느 나라, 어느 도시에서 열려요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        },
+        {
+          "id": "tbc-pending-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 1100,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "남태평양의 한 섬나라에서 거대한 해저화산이 폭발했는데, 어느 나라인가요?",
+          "answer": "",
+          "rubric": "",
+          "reviewNotes": [],
+          "referenceStatus": "not_provided",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "q-2EmyuAOmM",
+      "youtubeId": "q-2EmyuAOmM",
+      "title": "사랑의 김장 담그기",
+      "category": "news",
+      "publisher": "KBS · 약 2분",
+      "sourceUrl": "https://www.youtube.com/watch?v=q-2EmyuAOmM",
+      "sourceStatus": "not_independently_verified",
+      "notes": [],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "q-2EmyuAOmM-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 46,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "담근 김치는 누구에게 전달되나요?",
+          "answer": "형편이 어려운 이웃(저소득층)과 혼자 사는 어르신들",
+          "rubric": "둘 중 하나면 부분 정답, \"어려운 이웃\" 의미면 정답",
+          "reviewNotes": [
+            "원문에서 '둘 중 하나면 부분 정답'과 '어려운 이웃이면 정답' 기준이 겹칩니다. 확정 전 수동 검토합니다."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 52,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "방금 본 장면은 어떤 행사였나요?",
+          "answer": "어려운 이웃을 돕기 위해 함께 김장을 담그는 '사랑의 김장 담그기' 행사",
+          "rubric": "\"김장/김치 담그기\"면 정답, \"이웃 돕기\"까지 말하면 완전 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 57,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "올해는 김치를 몇 포기 담갔고, 이 행사는 몇 년째 이어지고 있나요?",
+          "answer": "2,800포기, 25년째",
+          "rubric": "둘 중 하나면 부분 정답. 근삿값(3천 포기 가까이, 20년 넘게)도 부분 인정",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 67,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "그날 날씨는 어땠고, 자원봉사자는 몇 명쯤 모였나요?",
+          "answer": "한파특보가 내려질 만큼 추운 날이었고, 자원봉사자 150여 명이 모였다",
+          "rubric": "날씨·인원 중 하나면 부분 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 80,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "새마을회 회장은 김장을 하는 기분이 어떻다고 했나요?",
+          "answer": "조금 춥지만 구민을 위해 김장을 하니 따뜻하고 감명 깊으며 기분이 아주 좋다고 했다",
+          "rubric": "\"기분 좋다/따뜻하다\" 의미면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 86,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "요즘 서민들에게 김장이 부담스러운 이유는 무엇이라고 했나요?",
+          "answer": "경기 불황에 물가까지 올라서",
+          "rubric": "불황·고물가 중 하나면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 105,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "구청장은 이번 겨울이 어떤 겨울이 될 거라고 했나요?",
+          "answer": "이웃과 함께하려는 새마을 회원들의 마음 덕분에 모두의 마음이 더 따뜻해지는 겨울",
+          "rubric": "\"따뜻한 겨울\" 의미면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 116,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "이날 행사는 누구에게 어떤 하루가 되었다고 했나요?",
+          "answer": "어려운 이웃과 자원봉사자 모두에게 훈훈한 하루",
+          "rubric": "\"훈훈한/따뜻한 하루\"면 정답, 대상까지 말하면 가점",
+          "reviewNotes": [
+            "가점 수치는 제공되지 않았습니다."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "q-2EmyuAOmM-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 120,
+          "delivery": "after_video",
+          "kind": "sequence",
+          "question": "김치가 만들어져서 이웃에게 가기까지 과정을 순서대로 말씀해 주세요.",
+          "answer": "절인 배추에 양념을 버무리고, 다른 탁자로 옮겨 김치통에 담은 뒤, 상자에 넣어 어려운 이웃에게 전달한다",
+          "rubric": "버무리기 → 김치통 담기 → 상자 포장·전달 순서와 누락 여부",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "mt7CuNcNXvk",
+      "youtubeId": "mt7CuNcNXvk",
+      "title": "추석 귀성길",
+      "category": "news",
+      "publisher": "YTN · 약 2분 35초",
+      "sourceUrl": "https://www.youtube.com/watch?v=mt7CuNcNXvk",
+      "sourceStatus": "not_independently_verified",
+      "notes": [],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "mt7CuNcNXvk-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 35,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "기차를 타러 가는 사람들 손에는 무엇이 들려 있었고, 아이는 어떤 모습이었나요?",
+          "answer": "알록달록한 선물이 한가득 들려 있었고, 아이는 엄마 손을 잡고 신나게 뛰듯 걸어갔다",
+          "rubric": "선물·아이 모습 중 하나면 부분 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 46,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "어떤 명절이었고, 이번 명절이 특별했던 이유는 무엇인가요?",
+          "answer": "추석이었고, 코로나로 2년 동안 가족을 제대로 못 만나다가 거리 두기가 풀린 뒤 처음 맞는 명절이었다",
+          "rubric": "\"추석\"만 말하면 부분 정답, \"코로나 이후 처음/오랜만에 가족 만남\" 의미까지 말하면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 55,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "인천에서 온 남성은 본가에서 어떻게 시간을 보내겠다고 했나요?",
+          "answer": "부모님을 뵙고 가족과 텐트를 쳐 놓고 시간을 보내겠다고 했다",
+          "rubric": "\"부모님 만나기\" 또는 \"텐트/캠핑\" 중 하나면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 64,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "혼자 타지에서 사는 여성은 집에 가자마자 무엇을 하겠다고 했나요?",
+          "answer": "엄마와 밥을 먹겠다고 했다",
+          "rubric": "\"엄마(가족)랑 밥\" 의미면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 82,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "공항에서 만난 남성의 고향은 어디였고, 코로나에 대해서는 뭐라고 했나요?",
+          "answer": "고향은 울산이고, 코로나 걱정은 되지만 지금은 안심돼서 괜찮다고 했다",
+          "rubric": "고향·코로나 언급 중 하나면 부분 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 99,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "제주도로 가는 사람은 왜 여행을 택했다고 했나요?",
+          "answer": "그동안 힘들었던 것을 잊고 편하게 지내고 싶어서",
+          "rubric": "\"쉬고 싶어서/편하게\" 의미면 정답. 명절 준비 대신 가족 여행이라는 맥락까지 말하면 가점",
+          "reviewNotes": [
+            "가점 수치는 제공되지 않았습니다."
+          ],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 110,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "버스터미널의 날씨는 어땠고, 사람들 표정은 어땠나요?",
+          "answer": "아직 여름처럼 더워 땀이 났지만, 선물을 든 사람들의 표정은 밝았다",
+          "rubric": "날씨(더움)·표정(밝음) 중 하나면 부분 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 138,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "버스 출발을 앞둔 남성은 고향 가는 마음이 어떻다고 했나요?",
+          "answer": "매년 가지만 오랜만이라 설레고, 출발까지 5분 정도 남아 마음이 급하다고 했다",
+          "rubric": "\"설렌다\" 또는 \"급하다\" 중 하나면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 155,
+          "delivery": "after_video",
+          "kind": "recall",
+          "question": "명절을 앞두고 사람들로 붐빈 곳은 어디였나요?",
+          "answer": "기차역, 공항, 버스터미널",
+          "rubric": "1곳이면 부분 정답, 2곳 이상이면 정답",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "mt7CuNcNXvk-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 155,
+          "delivery": "after_video",
+          "kind": "sequence",
+          "question": "방금 본 뉴스에 나온 장소와 사람들의 모습을 순서대로 말씀해 주세요.",
+          "answer": "선물을 들고 기차를 타러 가는 사람들, 비행기로 고향이나 여행지로 가는 사람들, 더운 날씨에도 선물을 가득 싣고 버스에 오르는 사람들이 차례로 나왔다",
+          "rubric": "기차역 → 공항 → 버스터미널 순서와 각 장면 내용의 누락 여부",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "gWelcpdGy8k",
+      "youtubeId": "gWelcpdGy8k",
+      "title": "포도 농사를 함께하는 모자",
+      "category": "entertainment",
+      "publisher": "6시 내고향 · KBS 260910",
+      "sourceUrl": "https://www.youtube.com/watch?v=gWelcpdGy8k",
+      "sourceStatus": "not_independently_verified",
+      "notes": [],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "gWelcpdGy8k-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 10,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "저거 촬영할 때 계절이 언제였을까요?",
+          "answer": "가을 / 선선한 날씨라고 했다.",
+          "rubric": "가을 또는 선선한 날씨라는 내용이 있으면 인정. 당시 옷차림을 근거로 계절을 설명해도 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 27,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "왜 엄마한테 빨리 좀 따라고 재촉하는 건가요?",
+          "answer": "포도를 포장하는데 개수가 부족해서.",
+          "rubric": "포도 개수가 부족하다는 내용이 포함되면 인정. 포장할 포도가 모자란다는 의미면 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 27,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "엄마가 왜 화가 났을까요?",
+          "answer": "아들이 와서 포도를 빨리 따라고 계속 재촉해서.",
+          "rubric": "아들이 엄마를 재촉하거나 닦달했다는 의미가 포함되면 인정. \"빨리 하라고 해서\", \"계속 재촉해서\" 등의 표현도 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 43,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "엄마가 맡고 있는 일이 무엇인가요?",
+          "answer": "포도 농사.",
+          "rubric": "포도 농사라고 답하면 인정. 농사, 포도 따기, 포도 관리 등 비슷한 의미도 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 43,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "아들이 맡고 있는 일이 무엇인가요?",
+          "answer": "포도 판매.",
+          "rubric": "판매와 관련된 내용이면 인정. 포도를 팔거나 판매를 담당한다는 의미면 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 57,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "엄마가 아들한테 무엇을 자르라고 했나요?",
+          "answer": "축 처진 가지.",
+          "rubric": "\"가지\"가 포함되면 부분 인정. 축 처진 가지, 오래된 가지, 상태가 좋지 않은 가지 등 특징까지 언급하면 전체 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 125,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "포도 농사를 짓기 이전에는 무슨 농사를 했었나요?",
+          "answer": "사과 농사.",
+          "rubric": "사과 또는 사과 농사라는 내용이 있으면 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 211,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "사과 농사로 바꾸자는 의견에 아들은 뭐라고 했나요?",
+          "answer": "1년만 더 해보겠다고 했다.",
+          "rubric": "포도 농사를 조금 더 해보겠다는 내용이면 인정. \"1년만 더\"라는 기간까지 언급하면 더 정확한 답변으로 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 262,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "아들이 엄마에게 바란 것은 무엇이었나요?",
+          "answer": "적과를 해주는 것.",
+          "rubric": "\"적과\"라는 단어가 있으면 정확한 답변으로 인정. 사과 관리, 사과를 돌봐주는 것 등 같은 의미도 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "gWelcpdGy8k-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 262,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "아들은 왜 사과 관리를 못했다고 했나요?",
+          "answer": "포도를 관리하느라 못했다.",
+          "rubric": "포도 관리 때문에 못했다는 내용이면 인정. 포도 일 때문에 바빴다, 바빠서 못했다 등의 표현도 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        }
+      ]
+    },
+    {
+      "id": "XVG3-rpW7bQ",
+      "youtubeId": "XVG3-rpW7bQ",
+      "title": "풍년을 담은 다섯 빛깔 볏섬만두",
+      "category": "entertainment",
+      "publisher": "동네 한 바퀴 · KBS 260919",
+      "sourceUrl": "https://www.youtube.com/watch?v=XVG3-rpW7bQ",
+      "sourceStatus": "not_independently_verified",
+      "notes": [],
+      "segments": [
+        {
+          "id": "full",
+          "label": "전체 영상",
+          "start": 0,
+          "end": null
+        }
+      ],
+      "questions": [
+        {
+          "id": "XVG3-rpW7bQ-q1",
+          "number": 1,
+          "segmentId": "full",
+          "timestamp": 15,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "맨 처음 일행을 반겨준 생물은 무엇이었나요?",
+          "answer": "개.",
+          "rubric": "\"개\"라고 답하면 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q2",
+          "number": 2,
+          "segmentId": "full",
+          "timestamp": 26,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "무엇을 만들고 있다고 하나요?",
+          "answer": "만두.",
+          "rubric": "\"만두\"라고 답하면 인정. \"음식\"이라고만 답하면 애매한 답변으로 부분 인정 가능.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q3",
+          "number": 3,
+          "segmentId": "full",
+          "timestamp": 46,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "볏섬만두의 유래는 무엇인가요?",
+          "answer": "쌀이 유명한 지역이라서 / 풍년을 기원하는 의미에서 만들었다.",
+          "rubric": "\"쌀\"과 관련된 내용이 있으면 인정. \"풍년\"을 기원한다는 내용이 있으면 인정. 둘 중 하나만 언급해도 핵심 내용으로 인정 가능.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q4",
+          "number": 4,
+          "segmentId": "full",
+          "timestamp": 93,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "볏섬만두는 언제 먹나요?",
+          "answer": "정월 대보름 아침.",
+          "rubric": "\"정월 대보름\"이라는 내용이 있으면 인정. 특별한 날의 아침에 먹는다는 의미도 부분 인정 가능.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q5",
+          "number": 5,
+          "segmentId": "full",
+          "timestamp": 93,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "만두는 몇 개 먹나요?",
+          "answer": "색이 다른 5개의 만두.",
+          "rubric": "\"5개\"라고 답하면 인정. 색이 다르다는 특징까지 언급하면 더 정확한 답변으로 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q6",
+          "number": 6,
+          "segmentId": "full",
+          "timestamp": 121,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "만두소가 특별하다고 하는데, 무엇으로 구성되어 있나요?",
+          "answer": "나물로 구성되어 있다.",
+          "rubric": "\"나물\"이라는 단어가 포함되면 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q7",
+          "number": 7,
+          "segmentId": "full",
+          "timestamp": 204,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "만두와 함께 또 무엇을 먹나요?",
+          "answer": "떡국.",
+          "rubric": "\"떡국\"이라고 답하면 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q8",
+          "number": 8,
+          "segmentId": "full",
+          "timestamp": 245,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "만두는 천천히 먹어야 하나요, 빨리 먹어야 하나요?",
+          "answer": "흐물흐물해지기 때문에 빨리 먹어야 한다.",
+          "rubric": "\"빨리 먹어야 한다\"는 내용이 있으면 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q9",
+          "number": 9,
+          "segmentId": "full",
+          "timestamp": 245,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "만두를 빨리 먹으라고 한 이유는 무엇인가요?",
+          "answer": "시간이 지나면 흐물흐물해지기 때문이다.",
+          "rubric": "\"흐물흐물해진다\"는 내용이 있으면 인정. 밀가루 반죽이라 쉽게 퍼지거나 물러진다는 비슷한 의미도 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        },
+        {
+          "id": "XVG3-rpW7bQ-q10",
+          "number": 10,
+          "segmentId": "full",
+          "timestamp": 265,
+          "delivery": "at_time",
+          "kind": "recall",
+          "question": "국물 맛은 어떻다고 했나요?",
+          "answer": "버섯 향이 나서 더 맛있다고 했다.",
+          "rubric": "버섯 향과 관련된 내용이 있으면 인정. \"버섯 향이 난다\", \"버섯 맛이 난다\" 등 유사한 표현도 인정.",
+          "reviewNotes": [],
+          "referenceStatus": "user_provided_unverified",
+          "automaticScoring": false
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "ad-recall",
+      "category": "advertisement",
+      "question": "아까 무슨 광고였어요?",
+      "answer": null,
+      "sourceUrl": null,
+      "automaticScoring": false
+    }
+  ],
+  "policy": {
+    "videoDelivery": "youtube_embed_only",
+    "automaticScoring": false,
+    "notes": "대화·시청 흐름과 문항 검토용. 원영상 대조와 채점 기준 확정 전 자동 정답률/임상 점수를 산출하지 않는다. 순서 문항은 아직 타임스탬프 기반 이벤트 그래프로 검증되지 않았다."
+  }
+}

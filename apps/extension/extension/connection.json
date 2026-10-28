@@ -1,0 +1,6 @@
+{
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq5BLTP8E9qfAosee6DCYxoBXUExlLdhomOPmgajFsdFKPSDeaNry5Qixb3873J3aJn4oxFWnx5fmSGbjcJtiXyTjgUA4F7IlaQJS9+8LiCiGlClDq9lM9/d54md1VVGjTuYGPdnKLqcGBT4QOTynB2ifVi6OLrmem6ngzGormg5pIscI3yK96TY6zxoZZE+mzbJpoNcr3Xz7OOXkwIN7Zux2XsN+rSspckXny+fcndfOFAKmpbP4DJRZylVoMP6/zGanZMjIZFnPycrDVz/GsW6RAL5O0ilToKNukuQVKqqqjXK/xMIDEeYDAvobqrGYOI9BXejhSn1JrODt4BfKTwIDAQAB",
+  "id": "akoiangaganminhnneneodkjbeeemadm",
+  "origin": "chrome-extension://akoiangaganminhnneneodkjbeeemadm",
+  "apiRoot": "http://127.0.0.1:5173/api/score"
+}

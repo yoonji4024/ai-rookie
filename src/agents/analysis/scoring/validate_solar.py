@@ -47,13 +47,22 @@ def check_report(report: dict, score_result: dict) -> dict:
     """리포트 1건 검증 → 결과 딕셔너리."""
     issues: list[str] = []
 
+    if not isinstance(report, dict):
+        return {"ok": False, "issues": ["리포트는 JSON 객체여야 합니다."]}
     if "error" in report:
         return {"ok": False, "issues": [report["error"]]}
+    if report.get("_error"):
+        return {"ok": False, "issues": [report["_error"]]}
 
     # 1) 스키마
-    missing = REQUIRED_KEYS - set(report)
-    if missing:
-        issues.append(f"필수 키 누락: {missing}")
+    from src.agents.analysis.scoring.speech_report_schema import shape_issues
+    malformed = shape_issues(report)
+    if malformed:
+        return {"ok": False, "issues": malformed}
+    from src.agents.analysis.scoring.legacy_speech_input import input_issues
+    unavailable = input_issues(score_result)
+    if unavailable:
+        return {"ok": False, "issues": unavailable}
     axes_in = set(score_result["axes"])
     axes_out = set(report.get("axis_comments", {}))
     if axes_out - axes_in:
@@ -78,6 +87,23 @@ def check_report(report: dict, score_result: dict) -> dict:
     used = [w for w in BANNED if w in text]
     if used:
         issues.append(f"진단 단정/금지 표현: {used}")
+
+    # 기존 거절 결과를 보존하고, 통과 후보의 명시적인 점수 대응을 추가 확인한다.
+    if not issues:
+        from src.agents.analysis.scoring.report_contract import (
+            measurement_claim_issues, unsupported_reassurance_spans,
+        )
+        visible = {key: report[key] for key in REQUIRED_KEYS}
+        # 입력 게이트를 통과한 유한 수치 문자열도 기존 계약대로 허용한다.
+        # 원입력과 누락값은 변경하지 않고 비교용 뷰만 만든다.
+        numeric_view = {
+            "total_score": float(score_result["total_score"]),
+            "axes": {axis: {**value, "score": float(value["score"])}
+                     for axis, value in score_result["axes"].items()},
+        }
+        issues.extend(measurement_claim_issues(visible, numeric_view))
+        if unsupported_reassurance_spans(text):
+            issues.append("제공된 측정값만으로 상담·진료·검사 불필요를 단정함")
 
     return {"ok": not issues, "issues": issues, "text_len": len(text)}
 

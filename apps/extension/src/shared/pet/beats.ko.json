@@ -1,0 +1,63 @@
+[
+  {
+    "content": {
+      "provider": "youtube",
+      "id": "7mYPIds26Js",
+      "title": "영하 75도 냉동창고 취재"
+    },
+    "beats": [
+      {
+        "id": "cold-15",
+        "cue": { "at": "seconds", "seconds": 15 },
+        "pauseVideo": false,
+        "moment": { "context": "냉동창고 온도", "petLine": "저는 추운 거 진짜 못 참아요." },
+        "turns": [
+          { "id": "t1", "kind": "remark", "text": "어머, 저 안은 얼마나 추울까요?", "emotion": "surprise", "restMs": 600 },
+          { "id": "t2", "kind": "selfDisclosure", "text": "저는 추운 거 진짜 못 참아요. 겨울엔 이불 밖이 무서워요.", "restMs": 600 },
+          {
+            "id": "t3",
+            "kind": "ask",
+            "text": "화면에 온도가 몇 도라고 나왔죠?",
+            "simulatedAnswer": "영하 75도… 라고 했던 것 같아요. 엄청 춥던데.",
+            "ack": "맞아요, 영하 75.6도요! 숫자까지 기억하시다니.",
+            "restMs": 800,
+            "highlight": true
+          }
+        ]
+      },
+      {
+        "id": "cold-32",
+        "cue": { "at": "seconds", "seconds": 32 },
+        "pauseVideo": false,
+        "turns": [
+          { "id": "t4", "kind": "remark", "text": "기자분 옷이 하얗게 얼었어요! 저러다 감기 걸리시겠다.", "restMs": 600 },
+          {
+            "id": "t5",
+            "kind": "ask",
+            "text": "저기가 어떤 곳이라고 했더라…",
+            "simulatedAnswer": "아주 차가운 창고… 냉동창고라고 했어요.",
+            "ack": "네, 초저온 냉동창고였죠!",
+            "restMs": 800
+          }
+        ]
+      },
+      {
+        "id": "paused",
+        "cue": { "at": "paused-by-user" },
+        "pauseVideo": false,
+        "turns": [
+          { "id": "t6", "kind": "remark", "text": "잠깐 쉬시는 거예요? 저도 같이 쉴래요.", "restMs": 500 }
+        ]
+      },
+      {
+        "id": "ending",
+        "cue": { "at": "ended" },
+        "pauseVideo": false,
+        "turns": [
+          { "id": "t7", "kind": "remark", "text": "다 봤네요! 오늘도 같이 봐서 좋았어요.", "emotion": "happy", "restMs": 500 },
+          { "id": "t8", "kind": "promise", "text": "내일 이 시간에 또 볼래요? 저 기다릴게요.", "restMs": 0 }
+        ]
+      }
+    ]
+  }
+]

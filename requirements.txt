@@ -27,3 +27,10 @@ requests
 jupyter
 ipykernel
 pytest
+
+# demo API
+fastapi
+uvicorn
+python-multipart
+websockets          # A.X STT Batch WAF 거절 시 공식 Streaming API 폴백
+openai              # 국내 대회 API 연결 확인 스크립트에서만 사용

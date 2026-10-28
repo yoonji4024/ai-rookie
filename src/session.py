@@ -26,8 +26,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from src.agents.analysis.recall import score_recall_order
-from src.agents.analysis.response_matcher import match_response
+from src.agents.analysis.recall_pipeline import analyze_recall
 from src.agents.conversation.timing_gate import decide_question
 from src.event_graph.sample_loader import load_all
 
@@ -131,10 +130,7 @@ def recall_session(graph, responder: Responder, log: SessionLog) -> SessionLog:
         else _scripted_recall(responder, q)
     log.recall_response = resp
 
-    m = match_response(resp, graph, use_llm=True)
-    score = score_recall_order(m["scene_order"], graph)
-    score["matching"] = m
-    log.recall_score = score
+    log.recall_score = analyze_recall(resp, graph, use_llm=True)
     return log
 
 
@@ -170,7 +166,8 @@ def run_session(content_id: str | None, auto: bool, out_dir: Path = SESSION_DIR)
     s = log.recall_score
     print(f"\n  매칭 결과: {s['matching']['scene_order']}")
     print(f"  정답 순서: {graph.true_order}")
-    print(f"  Kendall's tau {s['kendall_tau']:+.2f} | 커버리지 {s['coverage']:.0%}")
+    tau_text = f"{s['kendall_tau']:+.2f}" if s['kendall_tau'] is not None else "측정 불가"
+    print(f"  매칭 장면 Kendall's tau {tau_text} | 매칭 커버리지 {s['matched_coverage']:.0%}")
     print(f"  오류 유형: {s['errors']}")
 
     print("\n[3] 보호자 리포트")
@@ -197,12 +194,12 @@ def _demo_recall(graph) -> str:
 def _build_report(log: SessionLog, graph) -> dict:
     """보호자 리포트 — 순서 회상 근거 기반. 진단 단정 금지."""
     s = log.recall_score
-    e = s.get("errors", {})
+    tau = s.get('kendall_tau')
     facts = [
-        f"장면 {len(graph.nodes)}개 중 {s.get('n_correct', 0)}개를 회상",
-        f"순서 일치도(Kendall's tau) {s.get('kendall_tau', 0):+.2f}",
-        f"누락 {e.get('omission', 0)}개, 순서 뒤바뀜 {e.get('reversal', 0)}건, "
-        f"없는 내용 {e.get('intrusion', 0)}개",
+        f"장면 {len(graph.nodes)}개 중 발화와 매칭한 장면 {s.get('n_correct', 0)}개",
+        (f"매칭 장면 순서 일치도(Kendall's tau) {tau:+.2f}" if tau is not None
+         else "순서 일치도 측정 불가"),
+        "누락·침입 오류 개수는 의미 판정이 완료되지 않아 측정하지 않음",
         f"시청 중 대화 {len(log.turns)}회",
     ]
     return {
