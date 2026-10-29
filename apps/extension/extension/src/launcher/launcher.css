@@ -14,8 +14,8 @@
 :root{color:#595959;background:#fffbec}
 html,body,#root{background:linear-gradient(#fffbec 0 50%,#fee9bc 50%)}
 .launcher{background:transparent}
-.brand{display:inline-flex;align-items:center;gap:6px;padding:4px 16px;background:#fafafa;border:2px solid #eeeeee;border-radius:999px;box-shadow:0 2px 4px #0000000f;font-family:'Jua',-apple-system,"Apple SD Gothic Neo",sans-serif;font-weight:400;font-size:17px;letter-spacing:.04em;color:#595959}
-.brand::before{content:"";width:11px;height:11px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#ffb109}
+.brand{display:inline-flex;align-items:center;padding:4px 0;background:none;border:0;box-shadow:none}
+.brand svg{display:block;height:20px;width:auto}
 .status{background:#e6f7ff;color:#2f86c9;border-radius:999px;font-weight:700}
 .pet-portrait{background:#e6f7ff;box-shadow:0 0 0 8px #fff,0 0 0 14px #fdbc67}
 .pet-dot{background:#78c77c;border-color:#fff}

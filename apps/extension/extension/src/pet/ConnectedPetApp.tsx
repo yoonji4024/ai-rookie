@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import PetFace from '../../../src/components/PetFace';
+import {MEMFLIX_LOGO_SVG} from '../brand/logo';
 import {createExtensionHost} from './extensionHost';
 import {frameMessage,isHostToFrame,PROTOCOL_VERSION as V,type FrameToHost,type VideoPulse} from '../../../src/shared/protocol';
 import {AUTH_KEY,WEB_URL,PortalClient,readAuth,type Auth,type Account,type CatalogVideo,type Prompt,type Watch,type Welcome,type Answer,type DialogueMemory} from './portalClient';
@@ -246,7 +247,7 @@ export default function ConnectedPetApp(){
   useEffect(()=>{setSegmentId(selected?.segments[0]?.id??'');},[videoId,catalog]);
   const responding=['idle','review'].includes(phase)&&!closing;
   return <div ref={root} className="connected-root" style={{'--pet-view-height':`${viewHeight}px`,'--pet-view-width':`${viewWidth}px`} as CSSProperties} data-compact={viewWidth<=370} data-short={viewHeight<=520} data-h={anchor.h} data-v={anchor.v}><button className="pet-toggle" aria-label="두리와 이야기 나누기" onClick={()=>setOpen(o=>!o)}><PetFace petName="두리" size={96} mood={phase==='saved'?'happy':'neutral'}/></button>{open&&<section className="connected-card" aria-label="MEMFLIX 함께 보기">
-    <header className="card-header"><strong>MEMFLIX<span>{account?`${account.displayName} 님과 함께`:'함께 보는 일상'}</span></strong><button className="collapse" onClick={()=>void chrome.runtime.openOptionsPage()} aria-label="소리와 마이크 설정">⚙</button><button className="collapse" onClick={()=>setOpen(false)} aria-label="접기">−</button></header>
+    <header className="card-header"><strong><span className="card-logo" dangerouslySetInnerHTML={{__html:MEMFLIX_LOGO_SVG}}/><span>{account?`${account.displayName} 님과 함께`:'함께 보는 일상'}</span></strong><button className="collapse" onClick={()=>void chrome.runtime.openOptionsPage()} aria-label="소리와 마이크 설정">⚙</button><button className="collapse" onClick={()=>setOpen(false)} aria-label="접기">−</button></header>
     <div className="card-body">
     {!ready?<p>연결을 확인하고 있어요.</p>:!account?<form className="stack" onSubmit={login}><div className="intro"><h2>다시 만나서 반가워요</h2><p>웹사이트에서 만든 아이디로 연결해 주세요.</p></div><label>아이디<input autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)} required/></label><label>비밀번호<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><button className="primary" disabled={busy}>로그인</button><a href={WEB_URL} target="_blank" rel="noreferrer">계정 만들기 · 패밀리 화면</a></form>:
     <>

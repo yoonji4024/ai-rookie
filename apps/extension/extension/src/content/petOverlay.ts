@@ -34,6 +34,7 @@ import {
 import type {} from "./bridge";
 import { entryMode, localDay, SNOOZE_KEY } from './platformEntry';
 import {acceptFrameLayout, type Layout} from './frameLayout';
+import {MEMFLIX_LOGO_SVG} from './brandLogo';
 
 /** src/shared/protocol.ts 의 PROTOCOL_VERSION 복제 — check-ext 가 대조한다 */
 const V = 2 as const;
@@ -96,10 +97,10 @@ function showInvitation(): void {
     width: 'min(350px, calc(100vw - 40px))', 'z-index': '2147483647' });
   const root = invitation.attachShadow({ mode: 'open' });
   root.innerHTML = `<style>
-    :host{all:initial}*{box-sizing:border-box}section{font:16px/1.6 -apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;color:#38292b;background:#fffcf8;border:1px solid #e6d9d5;border-radius:22px;padding:24px;box-shadow:0 12px 45px #34232924}
-    small{color:#723841;font-weight:700;letter-spacing:.1em}h2{font-size:23px;margin:12px 0 6px}p{margin:0 0 18px;color:#6e6361}button{width:100%;min-height:46px;border:1px solid #e6d9d5;border-radius:12px;background:white;color:#514447;font:inherit;cursor:pointer;padding:9px 14px;margin-top:8px}button.primary{background:#71343e;color:white;border-color:#71343e}button:focus-visible{outline:3px solid #b9875f;outline-offset:3px}.note{font-size:13px;margin:14px 0 0}
+    :host{all:initial}*{box-sizing:border-box}section{font:500 17px/1.6 Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#111;background:#fdfdfd;border:0;border-radius:24px;padding:26px 24px 22px;box-shadow:0 12px 40px rgba(0,0,0,.16)}
+    small{display:block}small svg{display:block;height:20px;width:auto}h2{font-size:24px;font-weight:800;margin:14px 0 6px}p{margin:0 0 18px;color:#111}button{width:100%;min-height:52px;border:2px solid #eeeeee;border-radius:999px;background:#fff;color:#111;font:inherit;font-weight:700;cursor:pointer;padding:10px 16px;margin-top:10px}button:hover{background:#fafafa}button.primary{background:#fdbc67;border-color:#fdbc67}button.primary:hover{background:#ffb109;border-color:#ffb109}button:focus-visible{outline:3px solid #2f86c9;outline-offset:3px}.note{font-size:15px;margin:14px 0 0}
   </style><section role="region" aria-label="MEMFLIX 함께 보기 안내">
-    <small>MEMFLIX</small><h2>같이 볼까요?</h2>
+    <small>${MEMFLIX_LOGO_SVG}</small><h2>같이 볼까요?</h2>
     <p>영상 옆에서 함께 보고,<br>기억에 남는 이야기를 나눠요.</p>
     <button class="primary" type="button">함께 볼게요</button>
     <button class="later" type="button">오늘은 혼자 볼게요</button>

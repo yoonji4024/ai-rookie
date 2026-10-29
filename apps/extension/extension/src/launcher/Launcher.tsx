@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react';
 import PetFace from '../../../src/components/PetFace';
 import {AUTH_KEY, PortalClient, WEB_URL, readAuth, type Auth} from '../pet/portalClient';
 import './launcher.css';
+import {MEMFLIX_LOGO_SVG} from '../brand/logo';
 import DialogueSettings from '../pet/DialogueSettings';
 
 export default function Launcher({settings=false}: {settings?: boolean}) {
@@ -32,7 +33,7 @@ export default function Launcher({settings=false}: {settings?: boolean}) {
     finally{setBusy(false);}
   }
   return <main className={'launcher '+(settings?'settings':'compact')+(loginOpen&&!auth?' signing-in':'')}>
-    <header><a className="brand" href={WEB_URL} target="_blank" rel="noreferrer">MEMFLIX</a><span className="status">{ready?(auth?'로그인됨':'로그인 전'):'확인 중'}</span></header>
+    <header><a className="brand" href={WEB_URL} target="_blank" rel="noreferrer" dangerouslySetInnerHTML={{__html:MEMFLIX_LOGO_SVG}}/><span className="status">{ready?(auth?'로그인됨':'로그인 전'):'확인 중'}</span></header>
     {loginOpen&&!auth?<form className="launcher-login" onSubmit={login}>
       <h1>두리와 인사해요</h1><p>MEMFLIX에서 만든 일반 사용자 계정으로 로그인해 주세요.</p>
       <label htmlFor="launcher-username">아이디</label><input id="launcher-username" autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)} required disabled={busy}/>
