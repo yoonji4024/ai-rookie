@@ -8,8 +8,8 @@ import {startPcmAudioCapture,recordingHasVoice,type PcmAudioCapture} from './aud
 import type {LiveTranscript} from './liveTranscript';
 import './connected.css';
 import type {Layout} from '../content/frameLayout';
-import SpeechControls,{MicIcon,SpeakerIcon} from './SpeechControls';
-import type {Phase} from './speechControls';
+import SpeechControls,{MicIcon,SpeakerIcon} from './SpeechControls.tsx';
+import type {Phase} from './speechControls.ts';
 import {DEFAULT_PREFERENCES,PREFERENCES_KEY,readPreferences,silenceDecision,automaticTurnAllowed,type SilenceState} from './dialoguePreferences';
 
 type Session={kind:'watch'|'welcome'; id:string; title:string; prompts:Prompt[]; watch?:Watch};

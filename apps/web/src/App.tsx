@@ -9,6 +9,7 @@ import {currentAccount,logout,startWatch,type Account,type WatchPlan} from './li
 import {localVideoSource} from './lib/localVideo';
 import '@fontsource-variable/noto-sans-kr';
 import '@fontsource/jua/400.css';
+import 'pretendard/dist/web/static/pretendard-dynamic-subset.css';
 import './theme.css';
 import './design-guide.css';
 export default function App(){

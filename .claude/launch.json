@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "memflix-api",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "src.api.portal_server:app", "--host", "127.0.0.1", "--port", "8001"],
+      "port": 8001
+    },
+    {
+      "name": "memflix-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/web", "run", "dev", "--", "--host", "127.0.0.1", "--port", "5173", "--strictPort"],
+      "port": 5173
+    }
+  ]
+}

@@ -18,42 +18,51 @@
   --l-cover-top:#fffbec;--l-cover-bottom:#fee9bc;
   --l-paper:#fdfdfd;--l-pill:#fafafa;
   --l-bezel:#f2f2f2;--l-band:#e4e4e4;--l-head:#eeeeee;--l-dot:#cacaca;
-  /* text grays (no black) */
-  --l-t1:#595959;--l-t2:#6d6d6d;--l-t3:#787878;--l-t4:#7d7d7d;
+  /* text colors — all black (#111), same as the logo */
+  --l-t1:#111;--l-t2:#111;--l-t3:#111;--l-t4:#111;
   --l-display:'Jua','Noto Sans KR Variable','Noto Sans KR',sans-serif;
   --l-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23ffbe68'/%3E%3Cpath d='M7 12.5l3.2 3.2L17 9' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   /* retint theme.css tokens */
   --ee-wine:var(--l-apricot-ink);--ee-wine-hover:#a65f00;--ee-rose:var(--l-apricot-3);--ee-cream:var(--l-apricot-3);
   --ee-paper:var(--l-paper);--ee-ink:var(--l-t1);--ee-muted:var(--l-t3);--ee-line:var(--l-band);--ee-focus:var(--l-sky-ink);
-  background:var(--l-bg-bottom);
+  background:var(--l-paper);
 }
-html,body{background:linear-gradient(var(--l-bg-top) 0 50vh,var(--l-bg-bottom) 50vh) fixed}
+html,body{background:var(--l-paper)}
+/* Whole-UI scale (text, spacing, images) on wide screens — same effect as browser zoom 125%.
+   Only from 1320px so the zoomed layout never drops below the 1050px breakpoint
+   (media queries still see the real viewport). vh units are zoomed too, so heights divide by --ui-zoom. */
+:root{--ui-zoom:1}
+html{zoom:var(--ui-zoom)}
+.ee-login,.ee-loading{min-height:calc(100vh / var(--ui-zoom))}
+@media (min-width:1320px){
+  :root{--ui-zoom:1.25}
+  .ee-modal{max-height:calc(90vh / var(--ui-zoom))}
+  .ee-live-player{max-height:calc(70vh / var(--ui-zoom))}
+}
 button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline-color:var(--l-sky-ink)}
 
-/* ---------- Sheet: white screen inside a thick gray bezel ---------- */
+/* ---------- Sheet: plain full-window white screen (no outer frame) ---------- */
 .ee-app{
-  margin:clamp(10px,1.6vw,20px);
-  min-height:calc(100vh - 2 * clamp(10px,1.6vw,20px));
+  min-height:calc(100vh / var(--ui-zoom));
   background:var(--l-paper);
-  border:clamp(8px,1vw,14px) solid var(--l-bezel);
-  border-radius:clamp(18px,2vw,28px);
   color:var(--l-t2);font-size:17px;font-weight:500;line-height:1.6;
 }
 .ee-app strong,.ee-app b,.ee-app h1,.ee-app h2,.ee-app h3,.ee-app label,.ee-app legend{font-weight:700}
 .ee-app h1,.ee-app h2,.ee-app h3{color:var(--l-t1)}
 .ee-en{display:none}
 
-/* ---------- Header: brand inside a white pill label ---------- */
-.ee-header{position:relative;max-width:none;height:96px;padding:0 clamp(18px,3vw,44px);border-bottom:2px dotted var(--l-dot)}
+/* ---------- Header: brand pill top-left, context text (who / what) top-center; pinned while scrolling ---------- */
+.ee-header{position:sticky;top:0;z-index:100;background:var(--l-paper);max-width:none;height:96px;padding:0 clamp(18px,3vw,44px);border-bottom:1px solid var(--l-band)}
 .ee-header>:last-child{margin-left:auto}
-.ee-header .ee-brand,.ee-login-story>.ee-brand{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  padding:8px 34px;background:var(--l-pill);border:2px solid var(--l-head);border-radius:999px;
-  box-shadow:0 2px 4px #0000000f;
-  font-family:var(--l-display);font-weight:400;font-size:22px;letter-spacing:.06em;color:var(--l-t1);
-}
-.ee-header .ee-brand::before,.ee-login-story>.ee-brand::before{content:"";width:14px;height:14px;margin-right:8px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--l-amber)}
-.ee-welcome,.ee-family-heading,.ee-watch-title{color:var(--l-t3);font-size:16px;font-weight:500}
+/* Logo: Pretendard Black "MEM ●●● FLIX" — three dots in the guide colors (apricot, sky, green), growing to the right */
+.ee-brand{display:inline-flex;align-items:center;gap:0;font-family:'Pretendard',sans-serif;font-weight:900;font-size:28px;letter-spacing:-.035em;line-height:1;color:#111;text-decoration:none;white-space:nowrap}
+.ee-brand-dots{display:inline-flex;align-items:center;gap:.075em;margin:0 .12em 0 .14em}
+.ee-brand-dots i{display:block;border-radius:50%}
+.ee-brand-dots i:nth-child(1){width:.13em;height:.13em;background:var(--l-apricot)}
+.ee-brand-dots i:nth-child(2){width:.19em;height:.19em;background:var(--l-sky)}
+.ee-brand-dots i:nth-child(3){width:.26em;height:.26em;background:var(--l-green)}
+.ee-welcome,.ee-family-heading,.ee-watch-title{color:var(--l-t3);font-weight:500}
+.ee-header>.ee-welcome,.ee-header>.ee-family-heading,.ee-header>.ee-watch-title,.ee-header>.ee-session-breadcrumb{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-width:36%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
 .ee-header-actions{gap:8px}
 .ee-header-actions button{padding:10px 20px;border-radius:999px;border:2px solid var(--l-head);background:#fff;color:var(--l-t1);font-weight:700}
 .ee-header-actions button:hover{background:var(--l-pill)}
@@ -65,21 +74,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .ee-muted{color:var(--l-t3)}
 .ee-text-button{color:var(--l-t2);font-weight:700;text-decoration-style:dotted;text-decoration-color:var(--l-dot)}
 /* Check pills (leaflet "이런 분께 추천드려요") */
-.ee-random-hint,.ee-report-notice,.ee-hello-privacy{position:relative;display:block;background:var(--l-cover-bottom);color:var(--l-t1)!important;border-radius:999px;padding:10px 20px 10px 48px!important;font-weight:500}
+.ee-random-hint,.ee-report-notice,.ee-hello-privacy{position:relative;display:block;background:var(--l-cover-bottom);color:var(--l-t1)!important;border-radius:26px;padding:10px 22px 10px 48px!important;font-weight:500;word-break:keep-all;overflow-wrap:break-word;text-wrap:balance}
+/* long notices wrap inside the pill instead of running past it (theme.css forces one line from 760px) */
+.ee-hello-card .ee-hello-privacy{white-space:normal;text-align:left}
 .ee-random-hint::before,.ee-report-notice::before,.ee-hello-privacy::before{content:"";position:absolute;left:14px;top:50%;width:24px;height:24px;transform:translateY(-50%);background:var(--l-check) center/contain no-repeat}
 .ee-report-notice{border-radius:20px}
 
 /* ---------- Buttons ---------- */
 .ee-primary,.ee-secondary{border-radius:999px;padding:14px 30px;font-size:16px;font-weight:700;gap:12px;min-height:52px}
-.ee-primary{background:var(--l-apricot);border:0;color:#4a4a4a}
+.ee-primary{background:var(--l-apricot);border:0;color:#111}
 .ee-primary:hover:not(:disabled){background:#f9ad4a}
 .ee-secondary{background:#fff;border:2px solid var(--l-head);color:var(--l-t1)}
 .ee-secondary:hover{background:var(--l-pill)}
 .ee-close{border:2px solid var(--l-head);color:var(--l-t1)}
 
 /* ---------- Library ---------- */
-.ee-main{max-width:1240px}
-.ee-hero{background:var(--l-apricot-3);border:0;border-radius:24px;margin:28px 0 56px}
+/* hero band spans the full window; the library below keeps the 1240px column, and the hero copy lines up with it */
+.ee-main{max-width:none;padding:0}
+.ee-library{box-sizing:border-box;max-width:1240px;margin:0 auto;padding:0 clamp(18px,2.5vw,32px) 40px}
+.ee-hero{background:var(--l-apricot-3);border:0;border-radius:0;margin:0 0 56px;padding-left:max(clamp(28px,5vw,96px),calc((100% - 1240px) / 2 + 96px));padding-right:max(clamp(28px,5vw,96px),calc((100% - 1240px) / 2 + 96px))}
 .ee-hero h1{font-size:clamp(34px,3.4vw,50px);line-height:1.3;margin:0 0 20px}
 .ee-hero-copy p{color:var(--l-t2);font-size:17px}
 .ee-hero-copy .ee-random-hint{display:inline-block;max-width:100%;margin-top:18px}
@@ -101,7 +114,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .ee-search>span{color:var(--l-apricot-ink)}
 .ee-toolbar{justify-content:center;margin:26px 0 30px}
 .ee-filters button{border:2px solid var(--l-head);border-radius:999px;background:#fff;color:var(--l-t1);font-weight:700;padding:9px 26px}
-.ee-filters button.active{background:var(--l-apricot);border-color:var(--l-apricot);color:#4a4a4a}
+.ee-filters button.active{background:var(--l-apricot);border-color:var(--l-apricot);color:#111}
 .ee-grid{gap:26px 22px}
 .ee-video-card{background:#fff;border:8px solid var(--l-bezel);border-radius:24px}
 .ee-video-card:hover{box-shadow:0 10px 24px #00000012}
@@ -113,12 +126,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .ee-thumb-shade{background:none}
 .ee-category-tag{border:0;border-radius:999px;padding:4px 14px;font-size:13px;font-weight:700;backdrop-filter:none;background:var(--l-green-3);color:var(--l-green-ink)}
 .ee-category-tag[data-cat="news"]{background:var(--l-sky-3);color:var(--l-sky-ink)}
-.ee-thumbnail-count{background:var(--l-apricot);color:#4a4a4a;font-weight:700;border-radius:999px;padding:3px 12px}
+.ee-thumbnail-count{background:var(--l-apricot);color:#111;font-weight:700;border-radius:999px;padding:3px 12px}
 .ee-card-body{padding:18px 18px 20px}
 .ee-app .ee-publisher{color:var(--l-t3);font-weight:700}
 .ee-app .ee-title-button h3{color:var(--l-t1);font-weight:700}
 .ee-footer{border-top:2px dotted var(--l-dot);padding-top:24px;margin-top:20px}
-.ee-footer .ee-brand{font-family:var(--l-display);font-weight:400;color:var(--l-t1)}
+.ee-footer .ee-brand{font-size:20px}
 .ee-footer>span{color:var(--l-t3)}
 .ee-empty{border:2px dashed var(--l-dot);background:var(--l-apricot-3)}
 
@@ -142,23 +155,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .ee-connection-code strong{font-family:var(--l-display);font-weight:400;color:var(--l-apricot-ink)}
 .ee-linked-member{border-bottom:2px dotted var(--l-dot)}
 
-/* ---------- Login = leaflet cover: half-split cream/apricot, phone-shaped cover ---------- */
-.ee-login{position:relative;box-sizing:border-box;gap:clamp(16px,2.4vw,32px);padding:clamp(14px,2.4vw,32px);background:linear-gradient(var(--l-cover-top) 0 50%,var(--l-cover-bottom) 50%)}
+/* ---------- Login: one plain screen — the copy shows alone, then fades into the login column ---------- */
+.ee-login{position:relative;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:110px clamp(20px,6vw,100px) 64px;background:var(--l-paper)}
 .ee-login *{box-sizing:border-box}
-.ee-login-story{position:relative;background:var(--l-paper);border:14px solid var(--l-head);border-radius:30px;box-shadow:0 0 0 16px var(--l-apricot);margin:16px;padding-top:120px}
-.ee-login-story::after{content:"";position:absolute;top:-30px;right:34px;width:64px;height:12px;background:radial-gradient(circle,#fff 0 3px,transparent 3.5px) 0 0/16px 12px repeat-x}
-.ee-login-story>.ee-brand{top:56px}
+.ee-login>.ee-brand{position:absolute;top:44px;left:clamp(20px,6vw,100px);font-size:30px}
+.ee-login .ee-login-story,.ee-login .ee-login-form{grid-area:1/1;margin:0;padding:0;background:none;transition:opacity .5s ease .4s,visibility 0s linear .4s}
+.ee-login .ee-login-story{width:min(520px,100%)}
+.ee-login .ee-login-form{display:block;width:min(410px,100%)}
+.ee-login:not(.is-intro) .ee-login-story,.ee-login.is-intro .ee-login-form{opacity:0;visibility:hidden;transition:opacity .4s ease,visibility 0s linear .4s}
 .ee-login-story h1{font-size:clamp(34px,3.6vw,54px);line-height:1.28;margin:0 0 22px}
 .ee-login-story p{color:var(--l-t2);font-weight:500}
 .ee-login-art{background:var(--l-apricot);color:#fff;transform:none;border-radius:999px;box-shadow:none;margin-top:36px;padding:14px 28px 14px 14px}
 .ee-login-art .ee-duri{background:var(--l-sky-3);border-radius:50%;padding:8px;width:clamp(90px,8vw,120px)}
 .ee-login-art-quote{font-weight:700;font-size:18px}
-.ee-login-form{background:var(--l-paper);border-radius:22px;align-self:center;margin:16px 0}
 .ee-login-form h2{font-size:clamp(28px,2.4vw,36px);line-height:1.3;margin:0 0 10px}
 .ee-login-form form>p{color:var(--l-t3)}
 .ee-login-form label,.ee-login-form legend{color:var(--l-t1)}
 .ee-login-form form>input,.ee-family-link input,.ee-family-signup input,.ee-active-question textarea{border:2px solid var(--l-head);border-radius:14px;background:#fff;color:var(--l-t1);font-weight:500}
 .ee-login-form form>input:focus,.ee-family-link input:focus,.ee-family-signup input:focus{border-color:var(--l-sky);outline:0;box-shadow:0 0 0 3px var(--l-sky-3)}
+.ee-login-form form>input,.ee-login-form .ee-family-signup input{border:0;background:#f3f3f3}
+.ee-login-form form>input:focus,.ee-login-form .ee-family-signup input:focus{box-shadow:0 0 0 3px var(--l-sky)}
+@media(prefers-reduced-motion:reduce){.ee-login .ee-login-story,.ee-login .ee-login-form{transition:none!important}}
 .ee-role-options label{border:0;border-radius:18px;background:var(--l-apricot-3)}
 .ee-role-options label:nth-child(2){background:var(--l-sky-3)}
 .ee-role-options label.active{box-shadow:inset 0 0 0 3px var(--l-apricot)}
@@ -170,7 +187,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 /* ---------- Welcome conversation: the card is a phone screen ---------- */
 .ee-hello>.ee-hello-greeting{color:var(--l-t1);font-family:var(--l-display);font-weight:400;font-size:26px}
 .ee-hello-greeting strong{color:var(--l-sky-ink);font-weight:400;font-size:30px}
-.ee-hello-card{background:#fff;border:14px solid var(--l-head);border-radius:34px;box-shadow:0 0 0 14px var(--l-apricot),0 18px 40px #00000018;margin:14px}
+.ee-hello-card{background:#fff;border:0;border-radius:32px;box-shadow:0 12px 40px rgba(0,0,0,.08);margin:14px}
 .ee-hello-card h1{font-size:clamp(28px,2.4vw,36px);line-height:1.4}
 .ee-hello-card p{color:var(--l-t2)}
 .ee-hello-mark,.ee-wait-icon,.ee-complete-mark{background:var(--l-apricot);color:#fff;border-radius:50%;box-shadow:0 0 0 8px var(--l-apricot-2)}
@@ -191,7 +208,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .ee-family-link-fields label{color:var(--l-t1)}
 .ee-family-tabs{justify-content:center}
 .ee-family-tabs button{border:2px solid var(--l-head);border-radius:999px;background:#fff;color:var(--l-t1);font-weight:700;padding:12px 28px}
-.ee-family-tabs .active{background:var(--l-apricot);border-color:var(--l-apricot);color:#4a4a4a}
+.ee-family-tabs .active{background:var(--l-apricot);border-color:var(--l-apricot);color:#111}
 .ee-welcome-history details{border-top:2px dotted var(--l-dot)}
 .ee-welcome-history summary{color:var(--l-t1)}
 .ee-history button{border:0;border-radius:16px;background:var(--l-pill)}
@@ -234,16 +251,62 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .ee-loading{background:transparent;color:var(--l-t1);font-family:var(--l-display);font-size:22px}
 
 @media (max-width:760px){
-  .ee-header{height:auto;padding-top:78px;padding-bottom:14px}
-  .ee-header .ee-brand{top:38px;font-size:19px;padding:6px 26px}
-  .ee-hero{margin:14px 0 40px}
+  .ee-header{height:auto;min-height:76px;padding-top:14px;padding-bottom:14px}
+  .ee-header .ee-brand{font-size:22px}
+  .ee-header>.ee-welcome,.ee-header>.ee-family-heading,.ee-header>.ee-watch-title,.ee-header>.ee-session-breadcrumb{display:none}
+  .ee-hero{margin:0 0 40px}
   .ee-video-card{border-width:5px;border-radius:18px}
   .ee-category-tag{top:8px;left:8px;padding:2px 10px;font-size:11px}
   .ee-card-play{width:32px;height:32px}
 }
 @media (max-width:650px){
-  .ee-login-story{margin:14px 14px 0;border-width:10px;box-shadow:0 0 0 12px var(--l-apricot);padding-top:96px}
-  .ee-login-story>.ee-brand{top:44px}
-  .ee-hello-card{margin:10px 6px;border-width:10px;box-shadow:0 0 0 10px var(--l-apricot)}
+  .ee-hello-card{margin:10px 6px}
   .ee-factor>span{flex-basis:50%}
 }
+
+/* ---------- Readable small text: guidance/caption sentences match the welcome-card body (19px, 17px on phones) ---------- */
+.ee-welcome,.ee-family-heading,.ee-watch-title,
+.ee-footer>span,.ee-login-form form>p,.ee-text-button,
+.ee-hero-copy .ee-random-hint,.ee-hello-card small,.ee-hello-card .ee-hello-privacy,
+.ee-watch-controls>div:first-child,.ee-watch-footnote,
+.ee-family-link p,.ee-family-signup p,.ee-report-notice,.ee-saved-prompt,.ee-form-error,.ee-connection-code p,.ee-app p.ee-muted,.ee-empty p{font-size:19px!important;line-height:1.6}
+@media (max-width:650px){
+  .ee-welcome,.ee-family-heading,.ee-watch-title,
+  .ee-footer>span,.ee-login-form form>p,.ee-text-button,
+  .ee-hero-copy .ee-random-hint,.ee-hello-card small,.ee-hello-card .ee-hello-privacy,
+  .ee-watch-controls>div:first-child,.ee-watch-footnote,
+  .ee-family-link p,.ee-family-signup p,.ee-report-notice,.ee-saved-prompt,.ee-form-error,.ee-connection-code p,.ee-app p.ee-muted,.ee-empty p{font-size:17px!important}
+}
+
+/* ---------- Featured carousel: centred 16:9 card (click to watch) with black gradient, smaller faded neighbours,
+   thin white chevrons on the card edges, dots below. Card ≤900px (≈1125px at 1.25 zoom) so the 1280px thumbnail isn't stretched. */
+.ee-feature{--card:min(900px,78%);margin:0 0 48px;user-select:none}
+.ee-feature-stage{position:relative;overflow:hidden;padding:28px 0}
+.ee-feature-sizer{width:var(--card);aspect-ratio:16/9;margin:0 auto}
+.ee-feature-slide{position:absolute;top:28px;left:50%;width:var(--card);aspect-ratio:16/9;overflow:hidden;border-radius:24px;background:#222;opacity:0;pointer-events:none;transform:translateX(-50%) scale(.846);transition:transform .55s ease,opacity .55s ease,box-shadow .55s ease}
+.ee-feature-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.ee-feature-slide.center{opacity:1;pointer-events:auto;z-index:2;transform:translateX(-50%) scale(1);box-shadow:0 16px 40px rgba(0,0,0,.22)}
+.ee-feature-slide.center::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.35) 30%,rgba(0,0,0,0) 60%),linear-gradient(90deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,0) 82%,rgba(0,0,0,.35) 100%)}
+.ee-feature-slide.prev,.ee-feature-slide.next{opacity:.45;pointer-events:auto;cursor:pointer;z-index:1}
+.ee-feature-slide.prev{transform:translateX(calc(-50% - 92.3% + 60px)) scale(.846)}
+.ee-feature-slide.next{transform:translateX(calc(-50% + 92.3% - 60px)) scale(.846)}
+.ee-feature-slide.before{transform:translateX(calc(-50% - 185%)) scale(.846)}
+.ee-feature-slide.after{transform:translateX(calc(-50% + 185%)) scale(.846)}
+.ee-feature-play{position:absolute;inset:0;z-index:1;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:inherit;background:transparent;cursor:pointer}
+.ee-feature-play:focus-visible{outline:4px solid var(--l-sky-ink);outline-offset:-4px}
+.ee-feature-arrow{position:absolute;top:50%;z-index:3;width:56px;height:96px;min-height:0;padding:0;border:0;border-radius:12px;background:transparent;display:grid;place-items:center;transform:translateY(-50%);cursor:pointer}
+.ee-feature-arrow svg{width:30px;height:56px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 6px rgba(0,0,0,.55));transition:transform .2s}
+.ee-feature-arrow:hover svg{transform:scale(1.12)}
+.ee-feature-arrow:focus{outline:none}
+.ee-feature-arrow:focus-visible{outline:3px solid #fff;outline-offset:-2px;background:rgba(0,0,0,.2)}
+.ee-feature-arrow.prev{left:calc(50% - var(--card) / 2 + 14px)}
+.ee-feature-arrow.next{left:calc(50% + var(--card) / 2 - 70px)}
+.ee-feature-dots{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:2px}
+.ee-feature-dots button{width:12px;height:12px;min-height:0;padding:0;border:0;border-radius:999px;background:#d6d6d6;transition:width .3s}
+.ee-feature-dots button.active{width:30px;background:var(--l-apricot)}
+@media (max-width:650px){
+  .ee-feature{--card:86%;margin-bottom:32px}
+  .ee-feature-slide{border-radius:18px}
+  .ee-feature-arrow{display:none}
+}
+@media (prefers-reduced-motion:reduce){.ee-feature-slide,.ee-feature-dots button,.ee-feature-arrow svg{transition:none}}
