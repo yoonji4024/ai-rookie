@@ -354,3 +354,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
   .ee-segment-modal .ee-segments button,.ee-segment-modal .ee-segments button:nth-child(n){font-size:16px;height:48px}
 }
 
+
+/* Keep the actual recognized answer visible during the greeting review. */
+.ee-hello-transcript{width:100%;text-align:left;background:var(--l-apricot-3);border:1px solid var(--l-band);border-radius:18px;padding:20px;box-sizing:border-box;overflow-wrap:anywhere}
+.ee-hello-transcript strong{font-size:16px;color:var(--l-t2)}
+.ee-hello-transcript p{margin:8px 0 0;white-space:pre-wrap}

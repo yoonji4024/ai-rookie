@@ -57,12 +57,12 @@ export default function WatchTogether({plan,onBack}:{plan:WatchPlan;onBack:()=>v
    if(!recordingHasVoice(result)){setError('편하실 때 말씀해 주세요. 그냥 이어서 보셔도 괜찮아요.');setState('watching');return;}
    const file=new File([result.blob],`${p.id}.wav`,{type:'audio/wav'});audio.current=[...audio.current.filter(f=>f.name!==file.name),file];
    const item:AnswerInput={id:p.id,question:p.question,userAnswer:'',audioFilename:file.name,videoTimestamp:position.current,transcriptSource:'recorded',answerKeywords:[]};answers.current=[...answers.current.filter(a=>a.id!==p.id),item];
-   try{item.userAnswer=await fetchTranscript(file,[]);if(!item.userAnswer.trim())throw new Error('Empty transcript')}catch{if(current()){setError('목소리는 저장했지만 글로 확인하지 못했어요. 이어서 보거나 다시 말씀해 주세요.');setState('watching')}return;}
+   try{item.userAnswer=await fetchTranscript(file,[]);if(!item.userAnswer.trim())throw new Error('인식된 말씀이 없어요. 다시 말씀해 주세요.')}catch(error){if(current()){setError(error instanceof Error&&error.name!=='AbortError'?error.message:'말씀을 글로 바꾸는 데 시간이 오래 걸려 중단했어요. 다시 말씀해 주세요.');setState('watching')}return;}
    if(!current())return;setCaption(item.userAnswer??'');
    let response='이야기해 주셔서 고마워요. 우리 이어서 볼까요?';
    const controller=new AbortController(),timeout=window.setTimeout(()=>controller.abort(),10000);
    try{response=await fetchEmpatheticReply({questionId:p.id,question:p.question,userAnswer:item.userAnswer??'',correctAnswer:'',answerKeywords:[],signal:controller.signal})}catch{/* one request only; do not retry uncertain completions */}finally{window.clearTimeout(timeout)}
-   if(!current())return;setReply(response);setState('speaking');voiceStop.current=playVarcoTts(response,VOICE,()=>{if(current()){busy.current=false;void finish.current()}},{speed:.92,pitch:.98});
+   if(!current())return;setReply(response);setState('speaking');voiceStop.current=playVarcoTts(response,VOICE,()=>{if(current()){busy.current=false;void finish.current()}},{speed:.92,pitch:.98},undefined,error=>{if(current()){busy.current=false;setState('watching');setError(error.message)}});
   }catch{if(current()){setError('목소리를 저장하지 못했어요. 다시 말씀해 주시겠어요?');setState('watching')}}finally{if(current())busy.current=false}
  };
  record.current=async()=>{
@@ -71,7 +71,7 @@ export default function WatchTogether({plan,onBack}:{plan:WatchPlan;onBack:()=>v
  };
  open.current=(p)=>{
   if(activeRef.current||failedPlayback.current)return;const epoch=playbackEpoch.current;player.current?.pauseVideo?.();activeRef.current=p;setActive(p);setError('');setCaption('');setReply('');setState('speaking');
-  voiceStop.current=playVarcoTts(p.question,VOICE,()=>{if(!mounted.current||failedPlayback.current||epoch!==playbackEpoch.current)return;if(stream.current?.active)void record.current();else setState('watching')},{speed:.92,pitch:.98});
+  voiceStop.current=playVarcoTts(p.question,VOICE,()=>{if(!mounted.current||failedPlayback.current||epoch!==playbackEpoch.current)return;if(stream.current?.active)void record.current();else setState('watching')},{speed:.92,pitch:.98},undefined,error=>{if(mounted.current&&!failedPlayback.current&&epoch===playbackEpoch.current){setState('watching');setError(error.message)}});
  };
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;window.clearInterval(timer.current);voiceStop.current?.();void capture.current?.cancel();stream.current?.getTracks().forEach(t=>t.stop())}},[]);
  useEffect(()=>{if(finished)closeTracks()},[finished]);

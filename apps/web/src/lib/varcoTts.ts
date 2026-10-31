@@ -35,9 +35,12 @@ export async function synthesizeVarcoTts(
       return_metadata: false,
     }),
   });
-  if (!res.ok) throw new Error(`VARCO TTS 요청 실패: ${res.status}`);
+  if (!res.ok) throw new Error(`음성을 준비하지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요. (HTTP ${res.status})`);
   const data = await res.json();
-  return data.audio as string;
+  if (typeof data.audio !== 'string' || !data.audio.trim()) {
+    throw new Error('재생할 음성을 받지 못했어요. 다시 시도해 주세요.');
+  }
+  return data.audio;
 }
 
 /**
@@ -50,36 +53,60 @@ export function playVarcoTts(
   onEnd: () => void,
   properties?: VarcoTtsProperties,
   onStart?: () => void,
+  onError?: (error: Error) => void,
 ): () => void {
   let cancelled = false;
   let audio: HTMLAudioElement | null = null;
   let started = false;
+  let settled = false;
   const controller = new AbortController();
+  const finish = (error?: Error) => {
+    if (cancelled || settled) return;
+    settled = true;
+    clearTimeout(timeout);
+    if (error && onError) onError(error);
+    else {
+      // Preserve recovery for existing callers without an error callback.
+      if (error && !started) onStart?.();
+      onEnd();
+    }
+  };
+  const timeout = setTimeout(() => {
+    finish(new Error('음성 연결이 늦어지고 있어요. 다시 시도해 주세요.'));
+    controller.abort();
+    audio?.pause();
+  }, 65000);
 
   (async () => {
     try {
       const audioB64 = await synthesizeVarcoTts(text, voiceId, properties, controller.signal);
-      if (cancelled) return;
+      if (cancelled || settled) return;
 
       audio = new Audio(`data:audio/wav;base64,${audioB64}`);
-      audio.onended = onEnd;
+      audio.onended = () => finish();
+      audio.onerror = () => finish(new Error('음성을 재생하지 못했어요. 브라우저의 소리 설정을 확인해 주세요.'));
       await audio.play();
+      if (cancelled || settled) return;
       started = true;
+      clearTimeout(timeout);
       onStart?.();
     } catch (err) {
       if (!cancelled) {
         console.error("VARCO TTS 합성/재생 실패:", err);
-        if (!started) onStart?.();
-        onEnd();
+        finish(err instanceof Error && err.name === 'NotAllowedError'
+          ? new Error('브라우저에서 소리 재생이 차단됐어요. 소리를 허용한 뒤 다시 눌러 주세요.')
+          : err instanceof Error ? err : new Error('음성을 재생하지 못했어요. 다시 시도해 주세요.'));
       }
     }
   })();
 
   return () => {
     cancelled = true;
+    clearTimeout(timeout);
     controller.abort();
     if (audio) {
       audio.onended = null;
+      audio.onerror = null;
       audio.pause();
     }
   };

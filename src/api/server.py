@@ -662,7 +662,8 @@ def _stt(path: str, keywords: list[str] | None = None) -> str:
 def _health() -> dict:
     return {"ok": True, "scoring_model": MODEL_PATH.exists(),
             "content_model": CONTENT_MODEL_PATH.exists(),
-            "tts": bool(os.environ.get("VARCO_API_KEY"))}
+            "tts": bool(os.environ.get("VARCO_API_KEY", "").strip()),
+            "stt": bool(os.environ.get("AX_API_KEY", "").strip())}
 
 
 @app.get("/health")

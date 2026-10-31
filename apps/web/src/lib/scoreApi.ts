@@ -105,11 +105,11 @@ export async function fetchTranscript(
   const res = await fetch(`${BASE}/transcribe`, {
     method: "POST",
     body: fd,
-    signal,
+    signal: signal ?? AbortSignal.timeout(120000),
   });
-  if (!res.ok) throw new Error(`A.X STT 실패: ${res.status}`);
+  if (!res.ok) throw new Error(`말씀을 글로 바꾸지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요. (HTTP ${res.status})`);
   const data = (await res.json()) as { text?: string };
-  return data.text?.trim() ?? "";
+  return typeof data.text === 'string' ? data.text.trim() : "";
 }
 
 /** 전사된 실제 답변에 근거한 짧은 시청 동반 반응을 생성한다. */
