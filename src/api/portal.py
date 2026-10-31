@@ -23,7 +23,12 @@ from src.api.conversation_memory import install_memory_routes, memory_prompts, N
 from src.api.portal_explanation import generate_portal_explanation, factual_explanation
 
 COOKIE = 'earlyear_session'
-ORIGINS = {'http://127.0.0.1:5173', 'http://localhost:5173'}
+# Exact frontend origins for local use and the team's LAN demo.
+ORIGINS = {
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
+    'http://192.168.0.178:5173',
+}
 CATALOG_PATH = Path(__file__).resolve().parents[2] / 'configs/content/team_video_questions.v1.json'
 # Preserve authored originals; these specific leading/ambiguous premises await review.
 HELD_IDS = {'a2GT6K5yzAY-q2','a2GT6K5yzAY-q8','VnuBn-jdNv8-q5','VnuBn-jdNv8-q8'}

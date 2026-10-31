@@ -62,6 +62,31 @@ def test_login_password_logout_and_cookie(setup):
     assert r.status_code==200
     cookie=r.headers['set-cookie'].lower();assert 'httponly' in cookie and 'samesite=strict' in cookie
 
+@pytest.mark.parametrize('origin', [
+    'http://127.0.0.1:5173', 'http://localhost:5173', 'http://192.168.0.178:5173',
+])
+@pytest.mark.parametrize('role', ['user', 'guardian'])
+def test_login_from_local_and_team_lan_origins(setup, origin, role):
+    app, calls = setup
+    c = TestClient(app, base_url=origin, headers={'Origin': origin})
+    account = register(c, 'synthetic-' + role, role)
+    credentials = {'username': 'synthetic-' + role, 'password': 'fictional-password-123'}
+    assert c.post('/api/account/logout').status_code == 200
+    assert c.get('/api/account/me').status_code == 401
+    assert c.post('/api/account/login', json={**credentials, 'password': 'wrong'}).status_code == 401
+    result = c.post('/api/account/login', json=credentials)
+    assert result.status_code == 200, result.text
+    assert c.get('/api/account/me').json()['id'] == account['id']
+    assert c.get('/api/account/me').json()['role'] == role
+    cookie = result.headers['set-cookie'].lower()
+    assert 'httponly' in cookie and 'samesite=strict' in cookie
+    for denied in ['http://192.168.0.178:5174', 'http://192.168.0.179:5173',
+                   'http://192.168.0.178.example.org:5173', 'https://unrelated.example', 'null', '']:
+        result = c.post('/api/account/login', headers={'Origin': denied}, json=credentials)
+        assert result.status_code == 403, denied
+    assert calls == []
+
+
 def test_expired_login_and_cross_origin(setup):
     app,_=setup;c=client(app);register(c,'owner')
     assert c.post('/api/family/code',headers={'Origin':'https://unrelated.example'}).status_code==403
