@@ -12,7 +12,7 @@
       "sourceStatus": "not_independently_verified",
       "notes": [
         "표시 제목은 질문 내용으로 붙인 탐색용 제목입니다.",
-        "개별 질문 시점은 미제공입니다. 각 구간이 끝나면 원래 문항 순서대로 질문합니다."
+        "1세션 손님·장소 문항은 원영상 화면 확인 후 1:40·2:30에 분산했습니다. 냉장고 문항은 정확한 대사 시점 미확인으로 기존 7:00 구간 종료에 유지합니다. 나머지 구간은 기존 종료 대화를 유지합니다."
       ],
       "segments": [
         {
@@ -45,29 +45,39 @@
           "id": "lnvaFy7cRmk-q1",
           "number": 1,
           "segmentId": "s1",
-          "timestamp": null,
-          "delivery": "after_segment",
+          "timestamp": 100,
+          "delivery": "at_time",
           "kind": "recall",
           "question": "새로 찾아온 여성 손님(게스트)은 누구인가요?",
           "answer": "한지민",
           "rubric": "",
           "reviewNotes": [],
           "referenceStatus": "user_provided_unverified",
-          "automaticScoring": false
+          "automaticScoring": false,
+          "timingReview": {
+            "date": "2026-11-03",
+            "method": "source_video_visual_review",
+            "note": "원영상 1:00~1:30의 손님 등장 뒤, 1:40 선착장 하선 장면에 배치. 화면 표본을 직접 확인한 편집 시점이며 무음 경계 검증은 아님."
+          }
         },
         {
           "id": "lnvaFy7cRmk-q2",
           "number": 2,
           "segmentId": "s1",
-          "timestamp": null,
-          "delivery": "after_segment",
+          "timestamp": 150,
+          "delivery": "at_time",
           "kind": "recall",
           "question": "출연진이 머물고 있는 장소는 어디인가요?",
           "answer": "바닷가 / 섬 마을",
           "rubric": "",
           "reviewNotes": [],
           "referenceStatus": "user_provided_unverified",
-          "automaticScoring": false
+          "automaticScoring": false,
+          "timingReview": {
+            "date": "2026-11-03",
+            "method": "source_video_visual_review",
+            "note": "원영상 2:00 섬 마을 전경, 2:20 마을 초입, 2:30 어민회관 도착을 화면으로 확인한 뒤 배치. 음성 대사의 정밀 검증은 아님."
+          }
         },
         {
           "id": "lnvaFy7cRmk-q3",
