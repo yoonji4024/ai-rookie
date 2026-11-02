@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test:voice": "node --experimental-strip-types --test tests/voiceFeedback.test.ts"
+    "test:voice": "node --experimental-strip-types --test tests/voiceFeedback.test.ts",
+    "test:timeline": "node --experimental-strip-types --test tests/watchTimeline.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-kr": "^5.3.1",
