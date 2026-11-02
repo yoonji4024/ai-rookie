@@ -7,6 +7,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
     plugins: [react()],
+    // Worktrees may share node_modules; Vite's dependency cache must stay local.
+    cacheDir: ".vite",
+    optimizeDeps: { include: ["html2canvas", "jspdf"] },
     server: {
       proxy: {
         // Voice-to-Face(SyncFace) — 같은 NC OpenAPI 키를 쓰는 블렌드셰이프 생성 API

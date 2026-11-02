@@ -35,3 +35,11 @@ body{margin:0;background:var(--ee-cream)}button,input,textarea{font:inherit}butt
 .ee-hello-card .ee-hello-privacy{max-width:none;width:100%;font-size:14px;word-break:keep-all;overflow-wrap:anywhere}
 @media(min-width:760px){.ee-hello-card .ee-hello-privacy{white-space:nowrap}}
 @media(max-width:650px){.ee-hello>.ee-hello-greeting{font-size:20px}.ee-hello-greeting strong{font-size:24px}}
+
+/* Web greeting and video conversation share the same microphone controls. */
+.ee-web-voice-settings {margin:20px auto 0;max-width:760px;text-align:left;font-size:16px;color:var(--ee-muted,#786e6c)}
+.ee-web-voice-settings summary {cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}
+.ee-web-voice-settings label {display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:48px;margin:8px 0}
+.ee-web-voice-settings input {width:22px;height:22px;accent-color:#773541}
+.ee-web-voice-settings select {min-height:44px;border:1px solid #ddcfcb;border-radius:10px;background:white;padding:6px 12px;font:inherit}
+.ee-web-voice-settings small {display:block;line-height:1.6}

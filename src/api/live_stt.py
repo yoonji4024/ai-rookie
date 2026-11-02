@@ -23,15 +23,22 @@ async def provider_connect():
         open_timeout=10, close_timeout=2, max_size=65536)
 
 
-def install_live_stt(app, db, origins, connect=None):
+def install_live_stt(app, db, origins, connect=None, *, web_origins=()):
     connect = connect or provider_connect
     active = set()
+    web_origins = frozenset(web_origins)
 
     def authenticate(token, origin):
         if not isinstance(token, str) or not 40 <= len(token) <= 128:
             return None
         digest = hashlib.sha256(token.encode()).hexdigest()
         with db() as c:
+            if origin in web_origins:
+                row = c.execute("""SELECT u.id FROM users u JOIN sessions s ON s.user_id=u.id
+                    WHERE s.token_hash=? AND s.expires>? AND u.role='user'
+                    AND NOT EXISTS (SELECT 1 FROM extension_sessions e WHERE e.token_hash=s.token_hash)""",
+                    (digest, time.time())).fetchone()
+                return row['id'] if row else None
             row = c.execute('''SELECT u.id FROM users u
               JOIN sessions s ON s.user_id=u.id
               JOIN extension_sessions e ON e.token_hash=s.token_hash
@@ -42,7 +49,7 @@ def install_live_stt(app, db, origins, connect=None):
     @app.websocket('/api/stt/live')
     async def live(socket: WebSocket):
         origin = socket.headers.get('origin')
-        if origin not in origins:
+        if origin not in origins and origin not in web_origins:
             await socket.close(code=1008)
             return
         await socket.accept()
@@ -55,9 +62,11 @@ def install_live_stt(app, db, origins, connect=None):
             if len(raw) > 512:
                 raise ValueError('start too large')
             start = json.loads(raw)
-            if not isinstance(start, dict) or set(start) != {'type','token'} or start['type'] != 'start':
+            keys = {'type'} if origin in web_origins else {'type','token'}
+            if not isinstance(start, dict) or set(start) != keys or start['type'] != 'start':
                 raise ValueError('invalid start')
-            owner = authenticate(start['token'], origin)
+            token = socket.cookies.get('earlyear_session', '') if origin in web_origins else start['token']
+            owner = authenticate(token, origin)
             if owner is None:
                 await socket.close(code=1008)
                 return
@@ -86,7 +95,7 @@ def install_live_stt(app, db, origins, connect=None):
                         if message['type'] == 'websocket.disconnect':
                             raise WebSocketDisconnect()
                         # Recheck revocation/expiry before forwarding any new PCM.
-                        if authenticate(start['token'], origin) != owner:
+                        if authenticate(token, origin) != owner:
                             raise ValueError('session ended')
                         chunk = message.get('bytes')
                         if chunk is not None:
@@ -136,7 +145,7 @@ def install_live_stt(app, db, origins, connect=None):
                 await sender
                 await asyncio.wait_for(receiver, 15)
                 text = ' '.join(parts).strip()
-                if not text or authenticate(start['token'], origin) != owner:
+                if not text or authenticate(token, origin) != owner:
                     raise ValueError('no final transcript or expired session')
                 await socket.send_json({'type':'done','text':text})
         except (Exception, asyncio.CancelledError):

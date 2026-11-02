@@ -4,11 +4,12 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "vite --config vite.config.ts",
+    "build": "tsc -b && vite build --config vite.config.ts",
+    "preview": "vite preview --config vite.config.ts",
     "test:voice": "node --experimental-strip-types --test tests/voiceFeedback.test.ts",
-    "test:timeline": "node --experimental-strip-types --test tests/watchTimeline.test.ts"
+    "test:timeline": "node --experimental-strip-types --test tests/watchTimeline.test.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-kr": "^5.3.1",

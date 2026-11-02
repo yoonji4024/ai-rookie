@@ -36,6 +36,7 @@ __pycache__/
 .ipynb_checkpoints/
 # Frontend generated content
 node_modules/
+.vite/
 dist/
 dist-ext/
 dist-responsive-review/

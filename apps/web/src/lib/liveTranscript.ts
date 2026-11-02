@@ -1,109 +1,54 @@
+/** One authenticated live stream per recording; never resend a failed waveform. */
 export interface LiveTranscriptSession {
-  send: (pcm16: ArrayBuffer) => void;
-  finish: () => Promise<string>;
-  cancel: () => void;
+  send(chunk:ArrayBuffer):void;
+  finish():Promise<string>;
+  cancel():void;
 }
-
-function liveTranscriptUrl(): string {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.host}/api/score/stt/live`;
-}
-
-/**
- * 녹음과 동시에 A.X STT로 PCM을 보내 답변 종료 뒤의 전사 대기를 없앤다.
- * 연결이 실패하면 호출부가 기존 파일 전사로 폴백하며, API 키는 백엔드에만 있다.
- */
-export function startLiveTranscript(
-  answerKeywords: string[] = [],
-  connectTimeoutMs = 1500,
-): Promise<LiveTranscriptSession> {
-  return new Promise((resolve, reject) => {
-    const socket = new WebSocket(liveTranscriptUrl());
-    socket.binaryType = "arraybuffer";
-    let settled = false;
-    let finished = false;
-    let finalSettled = false;
-    let resolveFinal: ((text: string) => void) | null = null;
-    let rejectFinal: ((reason: Error) => void) | null = null;
-    const finalText = new Promise<string>((finalResolve, finalReject) => {
-      resolveFinal = finalResolve;
-      rejectFinal = finalReject;
-    });
-    const timeout = window.setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      socket.close();
-      reject(new Error("A.X 실시간 전사 연결 시간이 초과됐습니다."));
-    }, connectTimeoutMs);
-
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ type: "start", keywords: answerKeywords }));
+export function startLiveTranscript(_keywords:string[]=[],connectTimeoutMs=12000,signal:AbortSignal=new AbortController().signal):Promise<LiveTranscriptSession>{
+  const apiRoot=window.location.origin+'/api/score';
+  return new Promise((resolve,reject)=>{
+    if(signal.aborted){reject(new Error('대화를 중단했어요.'));return;}
+    const url=new URL(apiRoot+'/stt/live');url.protocol=url.protocol==='https:'?'wss:':'ws:';
+    const socket=new WebSocket(url.href);
+    let ready=false,ending=false,settled=false,failed:Error|null=null;
+    let resolveFinal!:(value:string)=>void,rejectFinal!:(error:Error)=>void;
+    const final=new Promise<string>((ok,no)=>{resolveFinal=ok;rejectFinal=no;});
+    // Failure may arrive during recording, before finish() consumes this promise.
+    void final.catch(()=>{});
+    let finishTimer:ReturnType<typeof setTimeout>|undefined;
+    const connectTimer=setTimeout(()=>fail('음성 연결이 늦어지고 있어요. 다시 말하기를 눌러 주세요.'),connectTimeoutMs);
+    const lifetime=setTimeout(()=>fail('대화 연결 시간이 끝났어요.'),95000);
+    const cleanup=()=>{clearTimeout(connectTimer);clearTimeout(finishTimer);clearTimeout(lifetime);signal.removeEventListener('abort',abort);};
+    const fail=(message:string)=>{
+      if(settled)return;settled=true;failed=new Error(message);cleanup();
+      if(!ready)reject(failed);rejectFinal(failed);socket.close();
     };
-    socket.onmessage = (event) => {
-      if (typeof event.data !== "string") return;
-      const message = JSON.parse(event.data) as {
-        type?: string;
-        text?: string;
-        message?: string;
-      };
-      if (message.type === "ready" && !settled) {
-        settled = true;
-        window.clearTimeout(timeout);
+    const abort=()=>fail('대화를 중단했어요.');signal.addEventListener('abort',abort,{once:true});
+    socket.onopen=()=>{if(!settled)socket.send(JSON.stringify({type:'start'}));};
+    socket.onmessage=event=>{
+      if(settled)return;
+      let message:{type?:string;text?:unknown};
+      try{message=JSON.parse(String(event.data));}catch{fail('음성 응답을 확인하지 못했어요.');return;}
+      if(message.type==='ready'&&!ready){
+        ready=true;clearTimeout(connectTimer);
         resolve({
-          send: (pcm16) => {
-            if (socket.readyState === WebSocket.OPEN && !finished) socket.send(pcm16);
+          send(chunk){
+            if(settled||ending)return;
+            if(socket.readyState!==WebSocket.OPEN||socket.bufferedAmount>128000){fail('음성 연결이 끊겼어요.');return;}
+            socket.send(chunk);
           },
-          finish: () => {
-            if (!finished && socket.readyState === WebSocket.OPEN) {
-              finished = true;
-              socket.send(JSON.stringify({ type: "stop" }));
-            } else if (!finished) {
-              finished = true;
-              finalSettled = true;
-              rejectFinal?.(new Error("A.X 실시간 전사 연결이 이미 종료됐습니다."));
-            }
-            return finalText;
+          finish(){
+            if(failed)return Promise.reject(failed);
+            if(!ending&&!settled){ending=true;socket.send('{"type":"stop"}');finishTimer=setTimeout(()=>fail('전사 결과가 늦어지고 있어요. 자동으로 다시 보내지는 않아요.'),18000);}
+            return final;
           },
-          cancel: () => {
-            finished = true;
-            finalSettled = true;
-            rejectFinal?.(new Error("실시간 전사가 취소됐습니다."));
-            socket.close();
-          },
+          cancel:abort,
         });
-        return;
-      }
-      if (message.type === "done") {
-        const text = message.text?.trim() ?? "";
-        finalSettled = true;
-        if (text) resolveFinal?.(text);
-        else rejectFinal?.(new Error("A.X 실시간 전사 결과가 비어 있습니다."));
-        socket.close();
-      } else if (message.type === "error") {
-        finalSettled = true;
-        rejectFinal?.(new Error(message.message ?? "A.X 실시간 전사에 실패했습니다."));
-        socket.close();
-      }
+      }else if(message.type==='done'&&ending&&typeof message.text==='string'&&message.text.trim()){
+        settled=true;cleanup();resolveFinal(message.text.trim());socket.close();
+      }else if(message.type!=='transcript')fail('음성 연결을 마무리하지 못했어요.');
     };
-    socket.onerror = () => {
-      const error = new Error("A.X 실시간 전사 연결에 실패했습니다.");
-      if (!settled) {
-        settled = true;
-        window.clearTimeout(timeout);
-        reject(error);
-      } else {
-        rejectFinal?.(error);
-      }
-    };
-    socket.onclose = () => {
-      if (!settled) {
-        settled = true;
-        window.clearTimeout(timeout);
-        reject(new Error("A.X 실시간 전사 연결이 종료됐습니다."));
-      } else if (!finalSettled) {
-        finalSettled = true;
-        rejectFinal?.(new Error("A.X 실시간 전사 연결이 종료됐습니다."));
-      }
-    };
+    socket.onerror=()=>fail('음성 서버에 연결하지 못했어요.');
+    socket.onclose=()=>{if(!settled)fail('음성 연결이 종료됐어요.');};
   });
 }

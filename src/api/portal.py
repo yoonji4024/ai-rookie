@@ -435,6 +435,6 @@ def create_portal(backend, root: Path, *, extension_origins=()):
                            memory_provider=lambda owner,day,zone: memory_prompts(db,owner,day,zone))
     install_memory_routes(app,db,user)
     from src.api.live_stt import install_live_stt
-    install_live_stt(app, db, extension_origins)
+    install_live_stt(app, db, extension_origins, web_origins=ORIGINS)
     # New flow transcribes once from its recording; it does not start a second STT stream.
     return app
